@@ -5,12 +5,16 @@ import android.animation.AnimatorListenerAdapter
 import android.animation.ValueAnimator
 import android.annotation.SuppressLint
 import android.content.Context
+import android.support.v4.app.Fragment
+import android.support.v4.app.FragmentManager
+import android.support.v4.view.ViewCompat
 import android.util.AttributeSet
 import android.util.Log
 import android.view.GestureDetector
 import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
+import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.Scroller
 
@@ -18,6 +22,13 @@ import android.widget.Scroller
  * Created by 张宇 on 2019/4/11.
  * E-mail: zhangyu4@yy.com
  * YY: 909017428
+ *
+ * 支持上下滑的布局。
+ * 使用 [setAdapter] 方法来构造上下滑切换的视图。
+ *
+ * 可以直接对 [View] 进行上下滑，参考 [SlideAdapter] 或者 [SlideViewAdapter]。
+ * 可以对 [Fragment] 进行上下滑，参考 [SlideFragmentAdapter]。
+ *
  */
 open class SlidableLayout : FrameLayout {
 
@@ -123,12 +134,10 @@ open class SlidableLayout : FrameLayout {
             e1: MotionEvent, e2: MotionEvent,
             velocityX: Float, velocityY: Float
         ): Boolean {
-            Log.i("Yves", "onFling vx = $velocityX vy = $velocityY")
             return onUp(e2, velocityY)
         }
 
         fun onUp(e: MotionEvent, velocityY: Float = 0f): Boolean {
-            Log.i("Yves", "onUp vY = $velocityY")
             if (mState != STATE.SLIDE_NEXT && mState != STATE.SLIDE_PREV) {
                 return false
             }
@@ -179,9 +188,8 @@ open class SlidableLayout : FrameLayout {
                     override fun onAnimationEnd(animation: Animator?) {
                         if (direction != SlideDirection.Origin) {
                             delegate.swap()
-                            delegate.onDismissBackup(direction)
                         }
-                        mBackupView?.let(::removeView)
+                        delegate.onDismissBackup(direction)
                         mState = STATE.IDLE
                         Log.i("Yves", "finishSlide $direction")
                         adapter.finishSlide(direction)
@@ -237,7 +245,7 @@ open class SlidableLayout : FrameLayout {
         var backupViewHolder: ViewHolder? = null
 
         private fun ViewHolder?.prepare(direction: SlideDirection): ViewHolder {
-            val holder = this ?: adapter.onCreateViewHolder(context, mInflater)
+            val holder = this ?: adapter.onCreateViewHolder(context, this@SlidableLayout, mInflater)
             if (holder.view.parent == null) {
                 addView(holder.view, 0)
             }
@@ -256,7 +264,7 @@ open class SlidableLayout : FrameLayout {
         }
 
         fun onDismissBackup(direction: SlideDirection) {
-            backupViewHolder?.let { adapter.onViewDismiss(it, direction) }
+            backupViewHolder?.let { adapter.onViewDismiss(it, this@SlidableLayout, direction) }
         }
 
         fun swap() {
@@ -294,7 +302,8 @@ open class SlidableLayout : FrameLayout {
  * 假如从页面【A】试图滑动到页面【B】，但距离或者速度不够，所以放手后回弹到【A】，触发的回调是：
  *
  * - canSlideTo(SlideDirection.Next)
- * - onBindView(viewHolder【A】, SlideDirection.Next)
+ * - onBindView(viewHolder【B】, SlideDirection.Next)
+ * - onViewDismiss(viewHolder【B】, SlideDirection.Next)
  * - finishSlide(SlideDirection.Origin)
  */
 interface SlideAdapter<ViewHolder : SlideViewHolder> {
@@ -315,7 +324,7 @@ interface SlideAdapter<ViewHolder : SlideViewHolder> {
      * 一般来说，该方法会在 [SlidableLayout.setAdapter] 方法调用时触发一次，创建当前显示的 [View]，
      * 会在首次开始滑动时触发第二次，创建滑动目标的 [View]。
      */
-    fun onCreateViewHolder(context: Context, inflater: LayoutInflater): ViewHolder
+    fun onCreateViewHolder(context: Context, parent: ViewGroup, inflater: LayoutInflater): ViewHolder
 
     /**
      * 当 [View] 开始滑动到可见时触发，在这个方法中实现数据和 [View] 的绑定。
@@ -345,7 +354,7 @@ interface SlideAdapter<ViewHolder : SlideViewHolder> {
      * @param viewHolder 持有 [View] 的 [SlideViewHolder]
      * @param direction  滑动的方向
      */
-    fun onViewDismiss(viewHolder: ViewHolder, direction: SlideDirection) {}
+    fun onViewDismiss(viewHolder: ViewHolder, parent: ViewGroup, direction: SlideDirection) {}
 
     /**
      * 当滑动完成时触发。
@@ -359,13 +368,12 @@ open class SlideViewHolder(val view: View)
 
 abstract class SlideViewAdapter : SlideAdapter<SlideViewHolder> {
 
-
     /**
      * 创建 [View] 。
      * 一般来说，该方法会在 [SlidableLayout.setAdapter] 方法调用时触发一次，创建当前显示的 [View]，
      * 会在首次开始滑动时触发第二次，创建滑动目标的 [View]。
      */
-    protected abstract fun onCreateView(context: Context, inflater: LayoutInflater): View
+    protected abstract fun onCreateView(context: Context, parent: ViewGroup, inflater: LayoutInflater): View
 
     /**
      * 当 [view] 开始滑动到可见时触发，在这个方法中实现数据和 [view] 的绑定。
@@ -379,7 +387,9 @@ abstract class SlideViewAdapter : SlideAdapter<SlideViewHolder> {
      *
      * @param direction  滑动的方向
      */
-    protected open fun onViewDismiss(view: View, direction: SlideDirection) {}
+    protected open fun onViewDismiss(view: View, parent: ViewGroup, direction: SlideDirection) {
+        parent.removeView(view)
+    }
 
     /**
      * 当 [view] 完全出现时触发。
@@ -393,20 +403,32 @@ abstract class SlideViewAdapter : SlideAdapter<SlideViewHolder> {
      */
     protected open fun onViewComplete(view: View, direction: SlideDirection) {}
 
-    final override fun onCreateViewHolder(context: Context, inflater: LayoutInflater): SlideViewHolder {
-        return SlideViewHolder(onCreateView(context, inflater))
+    final override fun onCreateViewHolder(context: Context, parent: ViewGroup, inflater: LayoutInflater): SlideViewHolder {
+        return SlideViewHolder(onCreateView(context, parent, inflater))
     }
 
     final override fun onBindView(viewHolder: SlideViewHolder, direction: SlideDirection) {
-        onBindView(viewHolder.view, direction)
+        val v = viewHolder.view
+        onBindView(v, direction)
+        if (v is SlidableUI) {
+            v.startVisible(direction)
+        }
     }
 
-    final override fun onViewDismiss(viewHolder: SlideViewHolder, direction: SlideDirection) {
-        onViewDismiss(viewHolder.view, direction)
+    final override fun onViewDismiss(viewHolder: SlideViewHolder, parent: ViewGroup, direction: SlideDirection) {
+        val v = viewHolder.view
+        if (v is SlidableUI) {
+            v.invisible(direction)
+        }
+        onViewDismiss(v, parent, direction)
     }
 
     final override fun onViewComplete(viewHolder: SlideViewHolder, direction: SlideDirection) {
-        onViewComplete(viewHolder.view, direction)
+        val v = viewHolder.view
+        onViewComplete(v, direction)
+        if (v is SlidableUI) {
+            v.invisible(direction)
+        }
     }
 
     /**
@@ -416,6 +438,62 @@ abstract class SlideViewAdapter : SlideAdapter<SlideViewHolder> {
      */
     override fun finishSlide(direction: SlideDirection) {}
 }
+
+abstract class SlideFragmentAdapter(private val fm: FragmentManager) : SlideAdapter<FragmentViewHolder> {
+
+    private val viewHolderList = mutableListOf<FragmentViewHolder>()
+
+    abstract fun onCreateFragment(context: Context): Fragment
+
+    protected open fun onBindFragment(fragment: Fragment, direction: SlideDirection) {}
+
+    final override fun onCreateViewHolder(context: Context, parent: ViewGroup, inflater: LayoutInflater): FragmentViewHolder {
+        val viewGroup = FrameLayout(context)
+        viewGroup.id = ViewCompat.generateViewId()
+        val fragment = onCreateFragment(context)
+        fm.beginTransaction().add(viewGroup.id, fragment).commitAllowingStateLoss()
+        val viewHolder = FragmentViewHolder(viewGroup, fragment)
+        viewHolderList.add(viewHolder)
+        return viewHolder
+    }
+
+    final override fun onBindView(viewHolder: FragmentViewHolder, direction: SlideDirection) {
+        val fragment = viewHolder.f
+        fm.beginTransaction().show(fragment).commitAllowingStateLoss()
+        viewHolder.view.post {
+            onBindFragment(fragment, direction)
+            if (fragment is SlidableUI) {
+                fragment.startVisible(direction)
+            }
+        }
+    }
+
+    final override fun onViewComplete(viewHolder: FragmentViewHolder, direction: SlideDirection) {
+        val fragment = viewHolder.f
+        fragment.setMenuVisibility(true)
+        fragment.userVisibleHint = true
+        if (fragment is SlidableUI) {
+            fragment.completeVisible(direction)
+        }
+
+        viewHolderList.filter { it != viewHolder }.forEach {
+            val otherFragment = it.f
+            otherFragment.setMenuVisibility(false)
+            otherFragment.userVisibleHint = false
+        }
+    }
+
+
+    final override fun onViewDismiss(viewHolder: FragmentViewHolder, parent: ViewGroup, direction: SlideDirection) {
+        val fragment = viewHolder.f
+        fm.beginTransaction().hide(fragment).commitAllowingStateLoss()
+        if (fragment is SlidableUI) {
+            fragment.invisible(direction)
+        }
+    }
+}
+
+class FragmentViewHolder(v: ViewGroup, val f: Fragment) : SlideViewHolder(v)
 
 enum class SlideDirection : SlideIndexer {
     /**
@@ -459,4 +537,13 @@ enum class SlideAction {
      * 无法滑动
      */
     Freeze
+}
+
+interface SlidableUI {
+
+    fun startVisible(direction: SlideDirection)
+
+    fun completeVisible(direction: SlideDirection)
+
+    fun invisible(direction: SlideDirection)
 }

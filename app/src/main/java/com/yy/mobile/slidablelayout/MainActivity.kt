@@ -2,13 +2,14 @@ package com.yy.mobile.slidablelayout
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
-import android.widget.Toast
+import android.view.ViewGroup
 import com.yy.mobile.widget.SlidableLayout
 import com.yy.mobile.widget.SlideAction
 import com.yy.mobile.widget.SlideDirection
@@ -46,7 +47,7 @@ class MainActivity : AppCompatActivity() {
             }
 
             @SuppressLint("InflateParams")
-            override fun onCreateView(context: Context, inflater: LayoutInflater): View {
+            override fun onCreateView(context: Context, parent: ViewGroup, inflater: LayoutInflater): View {
                 return inflater.inflate(R.layout.activity_main, null, false)
             }
 
@@ -56,11 +57,15 @@ class MainActivity : AppCompatActivity() {
                 view.rl_bg.setBackgroundColor(info.background)
                 view.tv_desc.text = info.text
                 view.btn_i_am.setOnClickListener {
-                    Toast.makeText(this@MainActivity, info.text, Toast.LENGTH_SHORT).show()
+                    startActivity(
+                        Intent(this@MainActivity, FragmentDemoActivity::class.java)
+                            .putExtra("text", info.text)
+                    )
                 }
             }
 
-            override fun onViewDismiss(view: View, direction: SlideDirection) {
+            override fun onViewDismiss(view: View, parent: ViewGroup, direction: SlideDirection) {
+                super.onViewDismiss(view, parent, direction)
                 view.tv_desc.setTextColor(Color.BLACK)
                 view.tv_desc.setBackgroundColor(Color.TRANSPARENT)
             }
