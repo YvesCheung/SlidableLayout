@@ -9,7 +9,6 @@ import android.support.v4.app.Fragment
 import android.support.v4.app.FragmentManager
 import android.support.v4.view.ViewCompat
 import android.util.AttributeSet
-import android.util.Log
 import android.view.GestureDetector
 import android.view.LayoutInflater
 import android.view.MotionEvent
@@ -144,7 +143,6 @@ open class SlidableLayout : FrameLayout {
             val backView = mBackupView ?: return false
             val topView = mCurrentView ?: return false
             val delegate = mViewHolderDelegate ?: return false
-            val adapter = delegate.adapter
             val currentOffsetY = topView.y.toInt()
             var direction: SlideDirection? = null
             val duration = 250
@@ -153,7 +151,7 @@ open class SlidableLayout : FrameLayout {
             val sameDirection = (mState == STATE.SLIDE_NEXT && velocityY < 0) ||
                 (mState == STATE.SLIDE_PREV && velocityY > 0)
             val moveLongDistance = Math.abs(currentOffsetY) > measuredHeight / 3
-            if ((highSpeed && sameDirection) || moveLongDistance) { //fling
+            if ((highSpeed && sameDirection) || (!highSpeed && moveLongDistance)) { //fling
                 if (mState == STATE.SLIDE_NEXT) {
                     direction = SlideDirection.Next
                     mScroller.startScroll(0, currentOffsetY, 0,
@@ -191,11 +189,10 @@ open class SlidableLayout : FrameLayout {
                         }
                         delegate.onDismissBackup(direction)
                         mState = STATE.IDLE
-                        Log.i("Yves", "finishSlide $direction")
-                        adapter.finishSlide(direction)
                         if (direction != SlideDirection.Origin) {
                             delegate.onCompleteCurrent(direction)
                         }
+                        delegate.finishSlide(direction)
                     }
                 })
                 animator.start()
@@ -232,7 +229,7 @@ open class SlidableLayout : FrameLayout {
         removeAllViews()
         mViewHolderDelegate = ViewHolderDelegate(adapter).apply {
             prepareCurrent(SlideDirection.Origin)
-            onCompleteCurrent(SlideDirection.Origin)
+            onCompleteCurrent(SlideDirection.Origin, true)
         }
     }
 
@@ -259,8 +256,24 @@ open class SlidableLayout : FrameLayout {
         fun prepareBackup(direction: SlideDirection) =
             backupViewHolder.prepare(direction).also { backupViewHolder = it }
 
-        fun onCompleteCurrent(direction: SlideDirection) {
-            currentViewHolder?.let { adapter.onViewComplete(it, direction) }
+        fun onCompleteCurrent(direction: SlideDirection, isInit: Boolean = false) {
+            currentViewHolder?.let {
+                if (isInit) {
+                    it.view.post {
+                        adapter.onViewComplete(it, direction)
+                    }
+                } else {
+                    adapter.onViewComplete(it, direction)
+                }
+            }
+        }
+
+        fun finishSlide(direction: SlideDirection) {
+            val visible = currentViewHolder
+            val dismiss = backupViewHolder
+            if (visible != null && dismiss != null) {
+                adapter.finishSlide(dismiss, visible, direction)
+            }
         }
 
         fun onDismissBackup(direction: SlideDirection) {
@@ -288,16 +301,16 @@ open class SlidableLayout : FrameLayout {
  * - onCreateViewHolder(context, inflater) (如果是首次滑动)
  * - onBindView(viewHolder【B】, SlideDirection.Next)
  * - onViewDismiss(viewHolder【A】, SlideDirection.Next)
- * - finishSlide(SlideDirection.Next)
  * - onViewComplete(viewHolder【B】)
+ * - finishSlide(SlideDirection.Next)
  *
  * 假如再从页面【B】 滑动回上一个页面 【A】，触发的回调是：
  *
  * - canSlideTo(SlideDirection.Prev)
  * - onBindView(viewHolder【A】, SlideDirection.Prev)
  * - onViewDismiss(viewHolder【B】, SlideDirection.Prev)
- * - finishSlide(SlideDirection.Prev)
  * - onViewComplete(viewHolder【A】)
+ * - finishSlide(SlideDirection.Prev)
  *
  * 假如从页面【A】试图滑动到页面【B】，但距离或者速度不够，所以放手后回弹到【A】，触发的回调是：
  *
@@ -361,7 +374,7 @@ interface SlideAdapter<ViewHolder : SlideViewHolder> {
      *
      * @param direction 滑动的方向
      */
-    fun finishSlide(direction: SlideDirection) {}
+    fun finishSlide(dismissViewHolder: ViewHolder, visibleViewHolder: ViewHolder, direction: SlideDirection) {}
 }
 
 open class SlideViewHolder(val view: View)
@@ -381,6 +394,20 @@ abstract class SlideViewAdapter : SlideAdapter<SlideViewHolder> {
      * @param direction  滑动的方向
      */
     protected abstract fun onBindView(view: View, direction: SlideDirection)
+
+    /**
+     * 当滑动完成时触发。
+     *
+     * @param direction 滑动的方向
+     */
+    protected open fun finishSlide(direction: SlideDirection) {}
+
+    /**
+     * 当滑动完成时触发。
+     *
+     * @param direction 滑动的方向
+     */
+    protected open fun finishSlide(dismissView: View, visibleView: View, direction: SlideDirection) {}
 
     /**
      * 当滑动完成时，离开的 [view] 会触发，在这个方法中实现对 [view] 的清理。
@@ -431,12 +458,13 @@ abstract class SlideViewAdapter : SlideAdapter<SlideViewHolder> {
         }
     }
 
-    /**
-     * 当滑动完成时触发。
-     *
-     * @param direction 滑动的方向
-     */
-    override fun finishSlide(direction: SlideDirection) {}
+    final override fun finishSlide(dismissViewHolder: SlideViewHolder, visibleViewHolder: SlideViewHolder, direction: SlideDirection) {
+        finishSlide(direction)
+        finishSlide(dismissViewHolder.view, visibleViewHolder.view, direction)
+        if (dismissViewHolder.view is SlidableUI) {
+            dismissViewHolder.view.preload(direction)
+        }
+    }
 }
 
 abstract class SlideFragmentAdapter(private val fm: FragmentManager) : SlideAdapter<FragmentViewHolder> {
@@ -446,6 +474,8 @@ abstract class SlideFragmentAdapter(private val fm: FragmentManager) : SlideAdap
     abstract fun onCreateFragment(context: Context): Fragment
 
     protected open fun onBindFragment(fragment: Fragment, direction: SlideDirection) {}
+
+    protected open fun finishSlide(direction: SlideDirection) {}
 
     final override fun onCreateViewHolder(context: Context, parent: ViewGroup, inflater: LayoutInflater): FragmentViewHolder {
         val viewGroup = FrameLayout(context)
@@ -483,12 +513,18 @@ abstract class SlideFragmentAdapter(private val fm: FragmentManager) : SlideAdap
         }
     }
 
-
     final override fun onViewDismiss(viewHolder: FragmentViewHolder, parent: ViewGroup, direction: SlideDirection) {
         val fragment = viewHolder.f
         fm.beginTransaction().hide(fragment).commitAllowingStateLoss()
         if (fragment is SlidableUI) {
             fragment.invisible(direction)
+        }
+    }
+
+    final override fun finishSlide(dismissViewHolder: FragmentViewHolder, visibleViewHolder: FragmentViewHolder, direction: SlideDirection) {
+        finishSlide(direction)
+        if (dismissViewHolder.f is SlidableUI) {
+            dismissViewHolder.f.preload(direction)
         }
     }
 }
@@ -530,7 +566,7 @@ enum class SlideAction {
      */
     Slide,
     /**
-     * 加载中
+     * 加载中（未实现）
      */
     Load,
     /**
@@ -541,9 +577,23 @@ enum class SlideAction {
 
 interface SlidableUI {
 
-    fun startVisible(direction: SlideDirection)
+    /**
+     * 滑动开始，页面可见
+     */
+    fun startVisible(direction: SlideDirection) {}
 
-    fun completeVisible(direction: SlideDirection)
+    /**
+     * 滑动结束时，页面完全可见
+     */
+    fun completeVisible(direction: SlideDirection) {}
 
-    fun invisible(direction: SlideDirection)
+    /**
+     * 滑动结束时，页面完全不可见
+     */
+    fun invisible(direction: SlideDirection) {}
+
+    /**
+     * 滑动完全结束，可以预加载下一个页面
+     */
+    fun preload(direction: SlideDirection) {}
 }
