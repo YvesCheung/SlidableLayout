@@ -13,6 +13,7 @@ import android.view.GestureDetector
 import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
+import android.view.ViewConfiguration
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.Scroller
@@ -36,6 +37,13 @@ open class SlidableLayout : FrameLayout {
     constructor(context: Context, attrs: AttributeSet?) : super(context, attrs)
 
     constructor(context: Context, attrs: AttributeSet?, defStyleAttr: Int) : super(context, attrs, defStyleAttr)
+
+    private val mTouchSlop: Int
+
+    init {
+        val configuration = ViewConfiguration.get(context)
+        mTouchSlop = configuration.scaledPagingTouchSlop
+    }
 
     private enum class STATE {
         /**
@@ -78,9 +86,11 @@ open class SlidableLayout : FrameLayout {
     private val mBackupView: View?
         get() = mViewHolderDelegate?.backupViewHolder?.view
 
-    private val mGestureCallback = object : GestureDetector.SimpleOnGestureListener() {
+    private var downY = 0f
 
-        private var downY = 0f
+    private var downX = 0f
+
+    private val mGestureCallback = object : GestureDetector.SimpleOnGestureListener() {
 
         override fun onScroll(
             e1: MotionEvent, e2: MotionEvent,
@@ -104,6 +114,10 @@ open class SlidableLayout : FrameLayout {
             val startToMove = mState == STATE.IDLE && Math.abs(distanceY) > Math.abs(distanceX)
             val changeDirectionToNext = mState == STATE.SLIDE_PREV && totalDistance < 0
             val changeDirectionToPrev = mState == STATE.SLIDE_NEXT && totalDistance > 0
+
+            if (startToMove) {
+                requestParentDisallowInterceptTouchEvent()
+            }
 
             if (startToMove || changeDirectionToNext || changeDirectionToPrev) {
                 val action = adapter.canSlideTo(direction)
@@ -207,6 +221,7 @@ open class SlidableLayout : FrameLayout {
 
         override fun onDown(e: MotionEvent): Boolean {
             downY = e.y
+            downX = e.x
             return true
         }
     }
@@ -214,15 +229,46 @@ open class SlidableLayout : FrameLayout {
 
     @SuppressLint("ClickableViewAccessibility")
     override fun onTouchEvent(event: MotionEvent): Boolean {
+        val action = event.action and MotionEvent.ACTION_MASK
         if (gestureDetector.onTouchEvent(event)) {
             return true
-        } else if (event.action == MotionEvent.ACTION_UP
-            || event.action == MotionEvent.ACTION_CANCEL) {
+        } else if (action == MotionEvent.ACTION_UP
+            || action == MotionEvent.ACTION_CANCEL) {
             if (mGestureCallback.onUp(event)) {
                 return true
             }
         }
         return super.onTouchEvent(event)
+    }
+
+    override fun onInterceptTouchEvent(event: MotionEvent): Boolean {
+        val action = event.action and MotionEvent.ACTION_MASK
+        if (action != MotionEvent.ACTION_MOVE) {
+            if (mState == STATE.SLIDE_REJECT) {
+                return false
+            } else if (mState != STATE.IDLE) {
+                return true
+            }
+        }
+        when (action) {
+            MotionEvent.ACTION_DOWN -> {
+                downX = event.x
+                downY = event.y
+            }
+            MotionEvent.ACTION_MOVE -> {
+                val dy = Math.abs(event.y - downY)
+                val dx = Math.abs(event.x - downX)
+                if (dy > mTouchSlop && dy > 2 * dx) {
+                    requestParentDisallowInterceptTouchEvent()
+                    return true
+                }
+            }
+        }
+        return super.onInterceptTouchEvent(event)
+    }
+
+    private fun requestParentDisallowInterceptTouchEvent() {
+        parent?.requestDisallowInterceptTouchEvent(true)
     }
 
     fun setAdapter(adapter: SlideAdapter<out SlideViewHolder>) {
