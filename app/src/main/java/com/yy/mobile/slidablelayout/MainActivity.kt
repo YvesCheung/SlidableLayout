@@ -80,6 +80,4 @@ class MainActivity : AppCompatActivity() {
             }
         })
     }
-
-    data class ViewInfo(val background: Int, val text: String)
 }

@@ -531,7 +531,7 @@ abstract class SlideFragmentAdapter(private val fm: FragmentManager) : SlideAdap
 
 class FragmentViewHolder(v: ViewGroup, val f: Fragment) : SlideViewHolder(v)
 
-enum class SlideDirection : SlideIndexer {
+enum class SlideDirection {
     /**
      * 滑到下一个
      */
@@ -549,15 +549,12 @@ enum class SlideDirection : SlideIndexer {
      */
     Origin {
         override fun moveTo(index: Int): Int = index
-    }
-}
-
-interface SlideIndexer {
+    };
 
     /**
      * 计算index的变化
      */
-    fun moveTo(index: Int): Int
+    abstract fun moveTo(index: Int): Int
 }
 
 enum class SlideAction {

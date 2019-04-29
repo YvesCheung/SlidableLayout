@@ -24,14 +24,14 @@ import kotlinx.android.synthetic.main.activity_main.*
 class FragmentDemoActivity : FragmentActivity() {
 
     private val list = listOf(
-        MainActivity.ViewInfo(Color.BLUE, "blue"),
-        MainActivity.ViewInfo(Color.CYAN, "CYAN"),
-        MainActivity.ViewInfo(Color.GRAY, "GRAY"),
-        MainActivity.ViewInfo(Color.RED, "RED"),
-        MainActivity.ViewInfo(Color.GREEN, "GREEN"),
-        MainActivity.ViewInfo(Color.YELLOW, "YELLOW"),
-        MainActivity.ViewInfo(Color.WHITE, "WHITE"),
-        MainActivity.ViewInfo(Color.BLACK, "BLACK")
+        ViewInfo(Color.BLUE, "blue"),
+        ViewInfo(Color.CYAN, "CYAN"),
+        ViewInfo(Color.GRAY, "GRAY"),
+        ViewInfo(Color.RED, "RED"),
+        ViewInfo(Color.GREEN, "GREEN"),
+        ViewInfo(Color.YELLOW, "YELLOW"),
+        ViewInfo(Color.WHITE, "WHITE"),
+        ViewInfo(Color.BLACK, "BLACK")
     )
 
     private var text: String = ""
