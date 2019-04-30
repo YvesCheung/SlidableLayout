@@ -11,7 +11,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import com.yy.mobile.widget.SlidableLayout
-import com.yy.mobile.widget.SlideAction
 import com.yy.mobile.widget.SlideDirection
 import com.yy.mobile.widget.SlideFragmentAdapter
 import kotlinx.android.synthetic.main.activity_main.*
@@ -57,13 +56,9 @@ class FragmentDemoActivity : FragmentActivity() {
                 fragment.setText("${info.text} from $text")
             }
 
-            override fun canSlideTo(direction: SlideDirection): SlideAction {
+            override fun canSlideTo(direction: SlideDirection): Boolean {
                 val targetIdx = direction.moveTo(currentIdx)
-                return if (targetIdx in 0 until list.size) {
-                    SlideAction.Slide
-                } else {
-                    SlideAction.Freeze
-                }
+                return targetIdx in 0 until list.size
             }
 
             override fun finishSlide(direction: SlideDirection) {

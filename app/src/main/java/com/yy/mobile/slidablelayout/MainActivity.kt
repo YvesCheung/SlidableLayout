@@ -10,10 +10,9 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import com.yy.mobile.widget.SlidableLayout
-import com.yy.mobile.widget.SlideAction
 import com.yy.mobile.widget.SlideDirection
 import com.yy.mobile.widget.SlideViewAdapter
+import kotlinx.android.synthetic.main.activity_demo.*
 import kotlinx.android.synthetic.main.activity_main.view.*
 
 class MainActivity : AppCompatActivity() {
@@ -33,17 +32,15 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val slidableLayout = SlidableLayout(this)
-        setContentView(slidableLayout)
+        setContentView(R.layout.activity_demo)
 
-        slidableLayout.setAdapter(object : SlideViewAdapter() {
-            override fun canSlideTo(direction: SlideDirection): SlideAction {
+        refresh_layout.setEnableRefresh(true)
+        refresh_layout.setEnableLoadMore(true)
+
+        slidable_layout.setAdapter(object : SlideViewAdapter() {
+            override fun canSlideTo(direction: SlideDirection): Boolean {
                 val targetIdx = direction.moveTo(currentIdx)
-                return if (targetIdx in 0 until list.size) {
-                    SlideAction.Slide
-                } else {
-                    SlideAction.Freeze
-                }
+                return targetIdx in 0 until list.size
             }
 
             @SuppressLint("InflateParams")
