@@ -738,17 +738,6 @@ enum class SlideDirection {
     abstract fun moveTo(index: Int): Int
 }
 
-enum class SlideAction {
-    /**
-     * 正常滑动切换页面
-     */
-    Slide,
-    /**
-     * 无法滑动
-     */
-    Freeze
-}
-
 interface SlidableUI {
 
     /**

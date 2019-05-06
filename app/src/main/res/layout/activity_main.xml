@@ -1,29 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout
+<LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/rl_bg"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".MainActivity">
-
-    <TextView
-        android:id="@+id/tv_desc"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerInParent="true"
-        android:text="Hello World!"
-        android:textSize="25sp"
-        android:padding="8dp"
-        android:textStyle="bold" />
+    android:orientation="vertical"
+    android:padding="10dp">
 
     <Button
-        android:id="@+id/btn_i_am"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/tv_desc"
-        android:layout_centerHorizontal="true"
-        android:layout_margin="8dp"
-        android:text="i am button"
-        android:textSize="20sp" />
-</RelativeLayout>
+        android:layout_margin="10dp"
+        android:onClick="toDemoForFragment"
+        android:text="上下滑切换Fragment示例" />
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="10dp"
+        android:onClick="toDemoForView"
+        android:text="上下滑切换View示例" />
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="10dp"
+        android:text="无限循环示例" />
+</LinearLayout>
