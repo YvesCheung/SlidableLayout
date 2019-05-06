@@ -206,23 +206,22 @@ class SlidableLayout : FrameLayout, NestedScrollingChild2 {
                 return false
             }
 
+            val topView = mCurrentView ?: return resetTouch()
+            val currentOffsetY = topView.y.toInt()
             // if state is reject, don't consume the fling.
-            val consumedFling = !(mState satisfy Mask.REJECT)
+            val consumedFling = !(mState satisfy Mask.REJECT) || currentOffsetY != 0
             if (!dispatchNestedPreFling(velocityX, velocityY)) {
                 dispatchNestedFling(velocityX, velocityY, consumedFling)
             }
             stopNestedScroll()
 
             val backView = mBackupView ?: return resetTouch()
-            val topView = mCurrentView ?: return resetTouch()
             val delegate = mViewHolderDelegate
                 ?: return resetTouch()
             var direction: SlideDirection? = null
             val duration = 250
 
             if (consumedFling) {
-                val currentOffsetY = topView.y.toInt()
-
                 val highSpeed = Math.abs(velocityY) > 1000
                 val sameDirection = (mState == State.SLIDE_NEXT && velocityY < 0) ||
                     (mState == State.SLIDE_PREV && velocityY > 0)

@@ -10,6 +10,8 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import com.scwang.smartrefresh.layout.footer.ClassicsFooter
+import com.scwang.smartrefresh.layout.header.ClassicsHeader
 import com.yy.mobile.widget.SlideDirection
 import com.yy.mobile.widget.SlideViewAdapter
 import kotlinx.android.synthetic.main.activity_demo.*
@@ -36,6 +38,8 @@ class MainActivity : AppCompatActivity() {
 
         refresh_layout.setEnableRefresh(true)
         refresh_layout.setEnableLoadMore(true)
+        refresh_layout.setRefreshHeader(ClassicsHeader(this))
+        refresh_layout.setRefreshFooter(ClassicsFooter(this))
 
         slidable_layout.setAdapter(object : SlideViewAdapter() {
             override fun canSlideTo(direction: SlideDirection): Boolean {
