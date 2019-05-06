@@ -10,6 +10,7 @@ import android.support.v4.app.FragmentManager
 import android.support.v4.view.NestedScrollingChild2
 import android.support.v4.view.NestedScrollingChildHelper
 import android.support.v4.view.ViewCompat
+import android.support.v4.view.ViewCompat.TYPE_NON_TOUCH
 import android.util.AttributeSet
 import android.util.Log
 import android.view.GestureDetector
@@ -300,8 +301,10 @@ class SlidableLayout : FrameLayout, NestedScrollingChild2 {
             //eat all the dy
             val unconsumedX = dx.toInt()
             val consumedY = dy.toInt()
-            if (dispatchNestedPreScroll(unconsumedX, consumedY, mScrollConsumed, mScrollOffset)) {
-                dispatchNestedScroll(0, consumedY, unconsumedX, 0, mScrollOffset)
+            if (!dispatchNestedPreScroll(unconsumedX, consumedY, mScrollConsumed,
+                    mScrollOffset, TYPE_NON_TOUCH)) {
+                dispatchNestedScroll(0, consumedY, unconsumedX, 0,
+                    mScrollOffset, TYPE_NON_TOUCH)
             }
             return true
         }
