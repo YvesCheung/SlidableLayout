@@ -49,10 +49,9 @@ abstract class BaseDemoActivity : FragmentActivity() {
                 View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION or
                 View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or
                 View.SYSTEM_UI_FLAG_LOW_PROFILE
-        } else {
-            requestWindowFeature(Window.FEATURE_NO_TITLE)
-            window.addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
         }
+        requestWindowFeature(Window.FEATURE_NO_TITLE)
+        window.addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
     }
 
     /**
