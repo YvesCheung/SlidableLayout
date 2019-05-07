@@ -2,7 +2,6 @@ package com.yy.mobile.slidablelayout
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.graphics.drawable.Animatable
 import android.os.Bundle
 import android.support.v4.app.Fragment
 import android.support.v4.app.FragmentManager
@@ -77,20 +76,20 @@ class DemoForFragment : BaseDemoActivity() {
         override fun startVisible(direction: SlideDirection) {
             currentInfo?.let {
                 content_title.text = it.title
-                content_player.setImageDrawable(resources.getDrawable(it.drawableRes))
+                content_player.setImageDrawable(null) //should be snapshot
+                content_player.setGifResource(it.drawableRes)
             }
         }
 
         override fun completeVisible(direction: SlideDirection) {
-            val drawable = content_player.drawable
-            if (drawable is Animatable) {
-                drawable.start()
-            }
+            content_player.setTag(R.id.completeVisible, true)
+            content_player.startAnimation()
         }
 
         override fun invisible(direction: SlideDirection) {
             //clean up resource
             content_player.setImageDrawable(null)
+            content_player.setTag(R.id.completeVisible, false)
         }
 
         override fun onCreate(savedInstanceState: Bundle?) {

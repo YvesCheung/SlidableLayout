@@ -1,5 +1,8 @@
 package com.yy.mobile.slidablelayout
 
+import android.os.Handler
+import android.os.Looper
+
 /**
  * Created by 张宇 on 2019/5/6.
  * E-mail: zhangyu4@yy.com
@@ -18,12 +21,15 @@ class PageInfoRepository {
         PageInfo(R.drawable.h, "可以说明质量好多了")
     )
 
+    private val handler = Handler(Looper.getMainLooper())
+
     /**
      * get the `pageInfo` list in the range of [offset,offset+size)
      */
     fun requestPageInfo(
         offset: Int,
         size: Int,
+        delayMills: Long = 0,
         callback: (result: List<PageInfo>, isLastPage: Boolean) -> Unit
     ) {
         var isLastPage = true
@@ -37,6 +43,13 @@ class PageInfoRepository {
                 result = fakeRemoteResource.subList(offset, fakeRemoteResource.size).toList()
             }
         }
-        callback(result, isLastPage)
+
+        if (delayMills > 0) {
+            handler.postDelayed({
+                callback(result, isLastPage)
+            }, delayMills)
+        } else {
+            callback(result, isLastPage)
+        }
     }
 }

@@ -2,7 +2,6 @@ package com.yy.mobile.slidablelayout
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.graphics.drawable.Animatable
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -22,7 +21,7 @@ class DemoForView : BaseDemoActivity() {
     override fun createAdapter(data: SimpleQueue<PageInfo>): SlideAdapter<out SlideViewHolder> =
         ViewAdapter(data)
 
-    private inner class ViewAdapter(val data: SimpleQueue<PageInfo>) : SlideViewAdapter() {
+    private class ViewAdapter(val data: SimpleQueue<PageInfo>) : SlideViewAdapter() {
 
         override fun canSlideTo(direction: SlideDirection): Boolean {
             val info =
@@ -51,12 +50,14 @@ class DemoForView : BaseDemoActivity() {
                     data.current()!!
                 }
             view.content_title.text = info.title
-            view.content_player.setImageDrawable(resources.getDrawable(info.drawableRes))
+            view.content_player.setImageDrawable(null) //should be snapshot
+            view.content_player.setGifResource(info.drawableRes)
         }
 
         override fun onViewDismiss(view: View, parent: ViewGroup, direction: SlideDirection) {
             //clean up the resource
             view.content_player.setImageDrawable(null)
+            view.content_player.setTag(R.id.completeVisible, false)
             super.onViewDismiss(view, parent, direction)
         }
 
@@ -69,10 +70,8 @@ class DemoForView : BaseDemoActivity() {
         }
 
         override fun onViewComplete(view: View, direction: SlideDirection) {
-            val drawable = view.content_player.drawable
-            if (drawable is Animatable) {
-                drawable.start()
-            }
+            view.content_player.startAnimation()
+            view.content_player.setTag(R.id.completeVisible, true)
         }
     }
 }

@@ -66,21 +66,21 @@ abstract class BaseDemoActivity : FragmentActivity() {
             .setRefreshHeader(ClassicsHeader(this))
             .setRefreshFooter(ClassicsFooter(this))
             .setOnRefreshListener {
-                requestDataAndAddToAdapter(true)
+                requestDataAndAddToAdapter(true, 1000L)
             }
             .setOnLoadMoreListener {
-                requestDataAndAddToAdapter(false)
+                requestDataAndAddToAdapter(false, 1000L)
             }
     }
 
-    private fun requestDataAndAddToAdapter(insertToFirst: Boolean = true) {
-        repo.requestPageInfo(offset, pageSize) { result, isLastPage ->
+    private fun requestDataAndAddToAdapter(insertToFirst: Boolean = true, delayMills: Long = 0L) {
+        repo.requestPageInfo(offset, pageSize, delayMills) { result, isLastPage ->
             if (insertToFirst) {
                 dataList.addFirst(result)
-                refresh_layout.finishRefresh(1000, true, isLastPage)
+                refresh_layout.finishRefresh(0, true, isLastPage)
             } else {
                 dataList.addLast(result)
-                refresh_layout.finishLoadMore(1000, true, isLastPage)
+                refresh_layout.finishLoadMore(0, true, isLastPage)
             }
             offset += result.size
         }

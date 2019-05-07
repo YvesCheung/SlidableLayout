@@ -2,7 +2,6 @@ package com.yy.mobile.slidablelayout
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.graphics.drawable.Animatable
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -10,6 +9,7 @@ import com.yy.mobile.widget.SlideAdapter
 import com.yy.mobile.widget.SlideDirection
 import com.yy.mobile.widget.SlideViewAdapter
 import com.yy.mobile.widget.SlideViewHolder
+import kotlinx.android.synthetic.main.page_main_content.*
 import kotlinx.android.synthetic.main.page_main_content.view.*
 
 /**
@@ -22,7 +22,7 @@ class DemoForLoop : BaseDemoActivity() {
     override fun createAdapter(data: SimpleQueue<PageInfo>): SlideAdapter<out SlideViewHolder> =
         LoopAdapter(data)
 
-    private inner class LoopAdapter(val data: SimpleQueue<PageInfo>) : SlideViewAdapter() {
+    private class LoopAdapter(val data: SimpleQueue<PageInfo>) : SlideViewAdapter() {
 
         private var curIdx = 0
 
@@ -36,14 +36,19 @@ class DemoForLoop : BaseDemoActivity() {
         override fun onBindView(view: View, direction: SlideDirection) {
             val info = data[normalize(direction.moveTo(curIdx))]
             view.content_title.text = info.title
-            view.content_player.setImageDrawable(resources.getDrawable(info.drawableRes))
+            view.content_player.setImageDrawable(null) //should be snapshot
+            view.content_player.setGifResource(info.drawableRes)
         }
 
         override fun onViewComplete(view: View, direction: SlideDirection) {
-            val drawable = view.content_player.drawable
-            if (drawable is Animatable) {
-                drawable.start()
-            }
+            view.content_player.setTag(R.id.completeVisible, true)
+            view.content_player.startAnimation()
+        }
+
+        override fun onViewDismiss(view: View, parent: ViewGroup, direction: SlideDirection) {
+            super.onViewDismiss(view, parent, direction)
+            view.content_player.setTag(R.id.completeVisible, false)
+            view.content_player.setImageDrawable(null)
         }
 
         override fun finishSlide(direction: SlideDirection) {
