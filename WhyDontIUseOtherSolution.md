@@ -19,7 +19,8 @@
 ## 为什么RecyclerView不合适
 
 `RecyclerView` + `SnapHelper` 的方案比 `ViewPager` 好得多，既有对 `View` 的复用，滑动事件也已经处理好。
-但是依然**无法双向无限**滑动。我们可以在 `getItemCount` 方法中返回 Integer.MAX_VALUE 来假装无限。但是为了从头开始就可以下拉滑到上一个，索引就不能初始化为0，那初始值为 Integer.MAX_VALUE/2 ?
+
+但是依然**无法双向无限**滑动。我们可以在 `getItemCount` 方法中返回 Integer.MAX_VALUE 来假装无限个滑动元素。但是为了从头开始就可以下拉滑到上一个，元素列表的索引就不能初始化为0，那初始值为 Integer.MAX_VALUE/2 ?
 无论怎么掩饰，理论上还是有滑动到头的一天。
 
 ## 更优的一种解决方案
