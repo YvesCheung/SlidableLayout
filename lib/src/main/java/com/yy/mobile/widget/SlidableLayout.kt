@@ -42,6 +42,10 @@ class SlidableLayout : FrameLayout, NestedScrollingChild2 {
 
     constructor(context: Context, attrs: AttributeSet?, defStyleAttr: Int) : super(context, attrs, defStyleAttr)
 
+    companion object {
+        private const val DEBUG = false
+    }
+
     private val childHelper = NestedScrollingChildHelper(this)
 
     private val mTouchSlop: Int
@@ -406,7 +410,10 @@ class SlidableLayout : FrameLayout, NestedScrollingChild2 {
     override fun dispatchNestedPreFling(velocityX: Float, velocityY: Float) =
         childHelper.dispatchNestedPreFling(velocityX, velocityY)
 
-    private fun log(str: String) = Log.i("SlidableLayout", str)
+    @Suppress("ConstantConditionIf")
+    private fun log(str: String) {
+        if (DEBUG) Log.i("SlidableLayout", str)
+    }
 
     fun setAdapter(adapter: SlideAdapter<out SlideViewHolder>) {
         removeAllViews()

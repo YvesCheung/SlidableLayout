@@ -50,7 +50,6 @@ class DemoForView : BaseDemoActivity() {
                 } else {
                     data.current()!!
                 }
-            view.rl_bg.setBackgroundColor(info.background)
             view.content_title.text = info.title
             view.content_player.setImageDrawable(resources.getDrawable(info.drawableRes))
         }

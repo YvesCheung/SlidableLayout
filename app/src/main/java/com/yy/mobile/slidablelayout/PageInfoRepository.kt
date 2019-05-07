@@ -1,7 +1,5 @@
 package com.yy.mobile.slidablelayout
 
-import android.graphics.Color
-
 /**
  * Created by 张宇 on 2019/5/6.
  * E-mail: zhangyu4@yy.com
@@ -10,14 +8,14 @@ import android.graphics.Color
 class PageInfoRepository {
 
     private val fakeRemoteResource = listOf(
-        PageInfo(Color.BLUE, R.drawable.a, "我是第一个"),
-        PageInfo(Color.CYAN, R.drawable.b, "我是第二个"),
-        PageInfo(Color.GRAY, R.drawable.c, "我是第三个"),
-        PageInfo(Color.RED, R.drawable.d, "我是第四个"),
-        PageInfo(Color.GREEN, R.drawable.a, "我是第五个"),
-        PageInfo(Color.YELLOW, R.drawable.b, "我是第六个"),
-        PageInfo(Color.WHITE, R.drawable.c, "我是第七个"),
-        PageInfo(Color.BLACK, R.drawable.d, "我是第八个")
+        PageInfo(R.drawable.a, "接受挑战"),
+        PageInfo(R.drawable.b, "钢铁侠指日可待"),
+        PageInfo(R.drawable.c, "才知道原来有这个功能"),
+        PageInfo(R.drawable.d, "google拍下摔跤瞬间"),
+        PageInfo(R.drawable.e, "惊天一锤"),
+        PageInfo(R.drawable.f, "为了吃提高智商"),
+        PageInfo(R.drawable.g, "趁没人注意赶紧走"),
+        PageInfo(R.drawable.h, "可以说明质量好多了")
     )
 
     /**

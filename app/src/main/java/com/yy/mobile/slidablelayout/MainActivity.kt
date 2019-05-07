@@ -19,4 +19,8 @@ class MainActivity : FragmentActivity() {
     fun toDemoForView(v: View) {
         startActivity(Intent(this, DemoForView::class.java))
     }
+
+    fun toDemoForLoop(v: View) {
+        startActivity(Intent(this, DemoForLoop::class.java))
+    }
 }

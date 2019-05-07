@@ -5,7 +5,7 @@ package com.yy.mobile.slidablelayout
  * E-mail: zhangyu4@yy.com
  * YY: 909017428
  */
-interface SimpleQueue<Element> {
+interface SimpleQueue<Element> : List<Element> {
 
     fun moveToNext()
 

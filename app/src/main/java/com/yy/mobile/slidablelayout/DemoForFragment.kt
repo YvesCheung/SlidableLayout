@@ -76,7 +76,6 @@ class DemoForFragment : BaseDemoActivity() {
 
         override fun startVisible(direction: SlideDirection) {
             currentInfo?.let {
-                rl_bg.setBackgroundColor(it.background)
                 content_title.text = it.title
                 content_player.setImageDrawable(resources.getDrawable(it.drawableRes))
             }
@@ -96,32 +95,34 @@ class DemoForFragment : BaseDemoActivity() {
 
         override fun onCreate(savedInstanceState: Bundle?) {
             super.onCreate(savedInstanceState)
-            Log.i("Yves", "onCreate $currentInfo")
+            Log.i("SlidableLayout", "onCreate")
         }
 
         override fun onHiddenChanged(hidden: Boolean) {
             super.onHiddenChanged(hidden)
-            Log.i("Yves", "onHiddenChanged $hidden $currentInfo")
+            Log.i("SlidableLayout", "onHiddenChanged " +
+                "${if (hidden) "->hidden" else "->show"} " +
+                "$currentInfo")
         }
 
         override fun onResume() {
             super.onResume()
-            Log.i("Yves", "onResume $currentInfo")
+            Log.i("SlidableLayout", "onResume")
         }
 
         override fun onStop() {
             super.onStop()
-            Log.i("Yves", "onStop $currentInfo")
+            Log.i("SlidableLayout", "onStop")
         }
 
         override fun onDestroy() {
             super.onDestroy()
-            Log.i("Yves", "onDestroy $currentInfo")
+            Log.i("SlidableLayout", "onDestroy")
         }
 
         override fun setUserVisibleHint(isVisibleToUser: Boolean) {
             super.setUserVisibleHint(isVisibleToUser)
-            Log.i("Yves", "setUserVisibleHint $isVisibleToUser $currentInfo")
+            Log.i("SlidableLayout", "setUserVisibleHint isVisible = $isVisibleToUser $currentInfo")
         }
     }
 }
