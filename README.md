@@ -18,7 +18,7 @@
 
 ## 与其他方案的对比
 目前网络上大部分上下滑方案都是围绕 `ViewPager` 或者 `RecyclerView` + `SnapHelper` 。
-这是我的个人见解：为什么我不用ViewPager或RecyclerView来做上下滑布局。
+这是我的个人见解：[为什么我不用ViewPager或RecyclerView来做上下滑布局][3]。
 
 ## 使用
 
@@ -29,7 +29,7 @@
     android:layout_height="match_parent"/>
 ```
 
-`SlidableLayout` 本身实现了 [NestedScrollingChild][3] 接口，因此可以在外层嵌套其他滑动布局，比如自定义你的下拉刷新与上拉加载。
+`SlidableLayout` 本身实现了 [NestedScrollingChild][4] 接口，因此可以在外层嵌套其他滑动布局，比如自定义你的下拉刷新与上拉加载。
 
 ### 适配器业务逻辑
 
@@ -103,7 +103,7 @@ class MyAdapter(fm: FragmentManager) : SlideFragmentAdapter(fm) {
 slidable_layout.setAdapter(MyAdapter(supportFragmentManager))
 ```
 
-更详细的适配器使用可以参照 [demo][4] 。
+更详细的适配器使用可以参照 [demo][5] 。
 
 ### 滑动时机回调
 
@@ -172,5 +172,6 @@ class DemoFragment : Fragment(), SlidableUI {
 
   [1]: https://raw.githubusercontent.com/YvesCheung/SlidableLayout/master/material/slidableLayout.gif
   [2]: https://developer.android.com/reference/android/support/v4/widget/SwipeRefreshLayout
-  [3]: https://developer.android.com/reference/android/support/v4/view/NestedScrollingChild
-  [4]: https://github.com/YvesCheung/SlidableLayout/tree/master/app/src/main/java/com/yy/mobile/slidablelayout
+  [3]: https://github.com/YvesCheung/SlidableLayout/blob/master/WhyDontIUseOtherSolution.md
+  [4]: https://developer.android.com/reference/android/support/v4/view/NestedScrollingChild
+  [5]: https://github.com/YvesCheung/SlidableLayout/tree/master/app/src/main/java/com/yy/mobile/slidablelayout
