@@ -516,7 +516,8 @@ interface SlideAdapter<ViewHolder : SlideViewHolder> {
      *
      * @param direction 滑动的方向
      *
-     * @return 返回 true 表示可以滑动， false 表示不可滑动
+     * @return 返回 true 表示可以滑动， false 表示不可滑动。
+     * 如果有嵌套其他外层滑动布局（比如下拉刷新），当且仅当返回 false 时会触发外层的嵌套滑动。
      */
     fun canSlideTo(direction: SlideDirection): Boolean
 
@@ -659,6 +660,11 @@ abstract class SlideFragmentAdapter(private val fm: FragmentManager) : SlideAdap
 
     private val viewHolderList = mutableListOf<FragmentViewHolder>()
 
+    /**
+     * 创建要显示的 [Fragment]。
+     * 一般来说，该方法会在 [SlidableLayout.setAdapter] 调用时触发一次，创建当前显示的 [Fragment]，
+     * 会在首次开始滑动时触发第二次，创建滑动目标的 [Fragment]。
+     */
     abstract fun onCreateFragment(context: Context): Fragment
 
     protected open fun onBindFragment(fragment: Fragment, direction: SlideDirection) {}
@@ -748,22 +754,26 @@ enum class SlideDirection {
 interface SlidableUI {
 
     /**
-     * 滑动开始，页面可见
+     * 滑动开始，当前视图将要可见
+     * 可以在该回调中实现数据与视图的绑定，比如显示占位的图片
      */
     fun startVisible(direction: SlideDirection) {}
 
     /**
-     * 滑动结束时，页面完全可见
+     * 滑动完成，当前视图完全可见
+     * 可以在该回调中开始主业务，比如开始播放视频，比如广告曝光统计
      */
     fun completeVisible(direction: SlideDirection) {}
 
     /**
-     * 滑动结束时，页面完全不可见
+     * 滑动完成，当前视图完全不可见
+     * 可以在该回调中做一些清理工作，比如关闭播放器
      */
     fun invisible(direction: SlideDirection) {}
 
     /**
-     * 滑动完全结束，可以预加载下一个页面
+     *  已经完成了一次 direction 方向的滑动，用户很可能会在这个方向上继续滑动
+     *  可以在该回调中实现下一次滑动的预加载，比如开始下载下一个视频或者准备好封面图
      */
     fun preload(direction: SlideDirection) {}
 }
