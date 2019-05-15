@@ -643,7 +643,7 @@ abstract class SlideViewAdapter : SlideAdapter<SlideViewHolder> {
         val v = viewHolder.view
         onViewComplete(v, direction)
         if (v is SlidableUI) {
-            v.invisible(direction)
+            v.completeVisible(direction)
         }
     }
 
