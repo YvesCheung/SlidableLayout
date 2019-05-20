@@ -36,6 +36,11 @@ class DemoForAutoSlide : BaseDemoActivity() {
         }
     }
 
+    override fun onDestroy() {
+        handler.removeCallbacks(autoSlide)
+        super.onDestroy()
+    }
+
     private val autoSlide = Runnable {
         if (!slidable_layout.slideTo(autoSlideDirection)) {
             //如果当前方向不能再滑了，往反方向滑
