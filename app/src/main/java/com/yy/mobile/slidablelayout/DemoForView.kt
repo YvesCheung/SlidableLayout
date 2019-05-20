@@ -19,10 +19,11 @@ import kotlinx.android.synthetic.main.page_main_content.view.*
 class DemoForView : BaseDemoActivity() {
 
     override fun createAdapter(data: SimpleQueue<PageInfo>): SlideAdapter<out SlideViewHolder> =
-        ViewAdapter(data)
+        DemoViewAdapter(data)
 
-    private class ViewAdapter(val data: SimpleQueue<PageInfo>) : SlideViewAdapter() {
+    open class DemoViewAdapter(protected val data: SimpleQueue<PageInfo>) : SlideViewAdapter() {
 
+        @Suppress("CascadeIf")
         override fun canSlideTo(direction: SlideDirection): Boolean {
             val info =
                 if (direction == SlideDirection.Next) {

@@ -21,6 +21,7 @@ import android.view.ViewConfiguration
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.Scroller
+import kotlin.LazyThreadSafetyMode.NONE
 
 /**
  * Created by 张宇 on 2019/4/11.
@@ -43,7 +44,11 @@ class SlidableLayout : FrameLayout, NestedScrollingChild2 {
     constructor(context: Context, attrs: AttributeSet?, defStyleAttr: Int) : super(context, attrs, defStyleAttr)
 
     companion object {
-        private const val DEBUG = false
+        private const val DEBUG = true
+
+        private const val MIN_HIGH_SPEED = 1000f //定义滑动速度足够快的标准
+
+        const val DEFAULT_DURATION = 300 //默认滑行时间
     }
 
     private val childHelper = NestedScrollingChildHelper(this)
@@ -109,7 +114,7 @@ class SlidableLayout : FrameLayout, NestedScrollingChild2 {
 
     private var mState = State.of(Mask.IDLE)
 
-    private val mInflater by lazy { LayoutInflater.from(context) }
+    private val mInflater by lazy(NONE) { LayoutInflater.from(context) }
 
     private val mScroller = Scroller(context)
     private var mAnimator: ValueAnimator? = null
@@ -204,7 +209,11 @@ class SlidableLayout : FrameLayout, NestedScrollingChild2 {
             return true
         }
 
-        fun onUp(velocityX: Float = 0f, velocityY: Float = 0f): Boolean {
+        fun onUp(
+            velocityX: Float = 0f,
+            velocityY: Float = 0f,
+            duration: Int = DEFAULT_DURATION
+        ): Boolean {
             if (!(mState satisfy Mask.SLIDE)) {
                 stopNestedScroll()
                 return false
@@ -223,10 +232,9 @@ class SlidableLayout : FrameLayout, NestedScrollingChild2 {
             val delegate = mViewHolderDelegate
                 ?: return resetTouch()
             var direction: SlideDirection? = null
-            val duration = 250
 
             if (consumedFling) {
-                val highSpeed = Math.abs(velocityY) > 1000
+                val highSpeed = Math.abs(velocityY) >= MIN_HIGH_SPEED
                 val sameDirection = (mState == State.SLIDE_NEXT && velocityY < 0) ||
                     (mState == State.SLIDE_PREV && velocityY > 0)
                 val moveLongDistance = Math.abs(currentOffsetY) > measuredHeight / 3
@@ -415,12 +423,57 @@ class SlidableLayout : FrameLayout, NestedScrollingChild2 {
         if (DEBUG) Log.i("SlidableLayout", str)
     }
 
+    /**
+     * 设置适配器。
+     */
     fun setAdapter(adapter: SlideAdapter<out SlideViewHolder>) {
         removeAllViews()
         mViewHolderDelegate = ViewHolderDelegate(adapter).apply {
             prepareCurrent(SlideDirection.Origin)
             onCompleteCurrent(SlideDirection.Origin, true)
         }
+    }
+
+    /**
+     * 自动滑到 [direction] 方向的视图。
+     * 当且仅当布局处于静止状态时有效。
+     *
+     * @param direction 滑行方向：[SlideDirection.Next] 或 [SlideDirection.Prev]
+     * @param duration 滑行持续时间(ms)
+     *
+     * @return true 表示开始滑动
+     */
+    fun slideTo(direction: SlideDirection, duration: Int = DEFAULT_DURATION): Boolean {
+        if (direction != SlideDirection.Origin &&
+            mState satisfy Mask.IDLE) {
+
+            val delegate = mViewHolderDelegate
+                ?: return false
+            val adapter = delegate.adapter
+
+            startNestedScroll(ViewCompat.SCROLL_AXIS_VERTICAL, TYPE_NON_TOUCH)
+            requestParentDisallowInterceptTouchEvent()
+
+            //模拟在该方向上，以 mockSpeed 的速度滑行
+            val directionMask =
+                if (direction == SlideDirection.Prev) Mask.PREV else Mask.NEXT
+            val mockSpeed =
+                if (direction == SlideDirection.Prev) MIN_HIGH_SPEED else -MIN_HIGH_SPEED
+
+            mState =
+                if (adapter.canSlideTo(direction)) {
+                    delegate.prepareBackup(direction)
+                    State.of(directionMask, Mask.SLIDE)
+                } else {
+                    State.of(directionMask, Mask.SLIDE, Mask.REJECT)
+                }
+
+            val canSlide = !(mState satisfy Mask.REJECT)
+            log("Auto slide to $direction" + if (canSlide) "" else " but reject")
+            mGestureCallback.onUp(0f, mockSpeed, duration)
+            return canSlide
+        }
+        return false
     }
 
     private inner class ViewHolderDelegate<ViewHolder : SlideViewHolder>(

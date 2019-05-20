@@ -26,4 +26,11 @@
         android:layout_margin="10dp"
         android:onClick="toDemoForLoop"
         android:text="无限循环示例" />
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="10dp"
+        android:onClick="toDemoForAutoSlide"
+        android:text="自动滑动示例" />
 </LinearLayout>
