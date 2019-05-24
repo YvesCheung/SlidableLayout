@@ -19,6 +19,7 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.ViewConfiguration
 import android.view.ViewGroup
+import android.view.animation.Interpolator
 import android.widget.FrameLayout
 import android.widget.Scroller
 import kotlin.LazyThreadSafetyMode.NONE
@@ -46,10 +47,17 @@ class SlidableLayout : FrameLayout, NestedScrollingChild2 {
     companion object {
         private const val DEBUG = true
 
-        private const val MIN_HIGH_SPEED = 1000f //定义滑动速度足够快的标准
+        private const val MIN_FLING_VELOCITY = 400 // dips
 
-        const val DEFAULT_DURATION = 300 //默认滑行时间
+        const val MAX_DURATION = 600 //最大滑行时间ms
+
+        private val sInterpolator = Interpolator { t ->
+            val f = t - 1.0f
+            f * f * f * f * f + 1.0f
+        }
     }
+
+    private val mMinFlingSpeed: Float //定义滑动速度足够快的标准
 
     private val childHelper = NestedScrollingChildHelper(this)
 
@@ -58,6 +66,10 @@ class SlidableLayout : FrameLayout, NestedScrollingChild2 {
     init {
         val configuration = ViewConfiguration.get(context)
         mTouchSlop = configuration.scaledPagingTouchSlop
+
+        val density = context.resources.displayMetrics.density
+        mMinFlingSpeed = MIN_FLING_VELOCITY * density
+
         isNestedScrollingEnabled = true
     }
 
@@ -116,7 +128,7 @@ class SlidableLayout : FrameLayout, NestedScrollingChild2 {
 
     private val mInflater by lazy(NONE) { LayoutInflater.from(context) }
 
-    private val mScroller = Scroller(context)
+    private val mScroller = Scroller(context, sInterpolator)
     private var mAnimator: ValueAnimator? = null
 
     private var mViewHolderDelegate: ViewHolderDelegate<out SlideViewHolder>? = null
@@ -209,11 +221,7 @@ class SlidableLayout : FrameLayout, NestedScrollingChild2 {
             return true
         }
 
-        fun onUp(
-            velocityX: Float = 0f,
-            velocityY: Float = 0f,
-            duration: Int = DEFAULT_DURATION
-        ): Boolean {
+        fun onUp(velocityX: Float = 0f, velocityY: Float = 0f): Boolean {
             if (!(mState satisfy Mask.SLIDE)) {
                 stopNestedScroll()
                 return false
@@ -232,29 +240,35 @@ class SlidableLayout : FrameLayout, NestedScrollingChild2 {
             val delegate = mViewHolderDelegate
                 ?: return resetTouch()
             var direction: SlideDirection? = null
+            var duration: Int? = null
 
+            val widgetHeight = measuredHeight
             if (consumedFling) {
-                val highSpeed = Math.abs(velocityY) >= MIN_HIGH_SPEED
+                var dy: Int? = null
+                val highSpeed = Math.abs(velocityY) >= mMinFlingSpeed
                 val sameDirection = (mState == State.SLIDE_NEXT && velocityY < 0) ||
                     (mState == State.SLIDE_PREV && velocityY > 0)
-                val moveLongDistance = Math.abs(currentOffsetY) > measuredHeight / 3
+                val moveLongDistance = Math.abs(currentOffsetY) > widgetHeight / 3
                 if ((highSpeed && sameDirection) || (!highSpeed && moveLongDistance)) { //fling
                     if (mState == State.SLIDE_NEXT) {
                         direction = SlideDirection.Next
-                        mScroller.startScroll(0, currentOffsetY, 0,
-                            -currentOffsetY - measuredHeight, duration)
+                        dy = -currentOffsetY - widgetHeight
                     } else if (mState == State.SLIDE_PREV) {
                         direction = SlideDirection.Prev
-                        mScroller.startScroll(0, currentOffsetY, 0,
-                            measuredHeight - currentOffsetY, duration)
+                        dy = widgetHeight - currentOffsetY
                     }
                 } else { //back to origin
                     direction = SlideDirection.Origin
-                    mScroller.startScroll(0, currentOffsetY, 0, -currentOffsetY, duration)
+                    dy = -currentOffsetY
+                }
+
+                if (dy != null) {
+                    duration = calculateDuration(velocityY, widgetHeight, dy)
+                    mScroller.startScroll(0, currentOffsetY, 0, dy, duration)
                 }
             }
 
-            if (direction != null) { //perform fling animation
+            if (direction != null && duration != null) { //perform fling animation
                 mAnimator?.cancel()
                 mAnimator = ValueAnimator.ofFloat(1f).apply {
                     setDuration(duration.toLong())
@@ -263,8 +277,8 @@ class SlidableLayout : FrameLayout, NestedScrollingChild2 {
                             val offset = mScroller.currY.toFloat()
                             topView.y = offset
                             backView.y =
-                                if (mState == State.FLING_NEXT) offset + measuredHeight
-                                else offset - measuredHeight
+                                if (mState == State.FLING_NEXT) offset + widgetHeight
+                                else offset - widgetHeight
                         }
                     }
                     addListener(object : AnimatorListenerAdapter() {
@@ -320,6 +334,7 @@ class SlidableLayout : FrameLayout, NestedScrollingChild2 {
             return true
         }
     }
+
     private val gestureDetector = GestureDetector(context, mGestureCallback)
 
     @SuppressLint("ClickableViewAccessibility")
@@ -364,6 +379,35 @@ class SlidableLayout : FrameLayout, NestedScrollingChild2 {
             }
         }
         return intercept || super.onInterceptTouchEvent(event)
+    }
+
+    // just like ViewPager
+    private fun calculateDuration(velocity: Float, maxDistance: Int, currentDistance: Int): Int {
+
+        // We want the duration of the page snap animation to be influenced by the distance that
+        // the screen has to travel, however, we don't want this duration to be effected in a
+        // purely linear fashion. Instead, we use this method to moderate the effect that the distance
+        // of travel has on the overall snap duration.
+        fun distanceInfluenceForSnapDuration(f: Float): Float {
+            var t: Double = f.toDouble()
+            t -= 0.5 // center the values about 0.
+            t *= 0.3 * Math.PI / 2.0
+            return Math.sin(t).toFloat()
+        }
+
+        val half = maxDistance / 2
+        val distanceRatio = Math.min(1f, Math.abs(currentDistance).toFloat() / maxDistance)
+        val distance = half + half * distanceInfluenceForSnapDuration(distanceRatio)
+
+        val v = Math.abs(velocity)
+        val duration: Int =
+            if (v > 0) {
+                4 * Math.round(1000 * Math.abs(distance / v))
+            } else {
+                val pageDelta = Math.abs(currentDistance).toFloat() / maxDistance
+                ((pageDelta + 1f) * 100).toInt()
+            }
+        return Math.min(duration, MAX_DURATION)
     }
 
     private fun requestParentDisallowInterceptTouchEvent() {
@@ -439,11 +483,10 @@ class SlidableLayout : FrameLayout, NestedScrollingChild2 {
      * 当且仅当布局处于静止状态时有效。
      *
      * @param direction 滑行方向：[SlideDirection.Next] 或 [SlideDirection.Prev]
-     * @param duration 滑行持续时间(ms)
      *
      * @return true 表示开始滑动
      */
-    fun slideTo(direction: SlideDirection, duration: Int = DEFAULT_DURATION): Boolean {
+    fun slideTo(direction: SlideDirection): Boolean {
         if (direction != SlideDirection.Origin &&
             mState satisfy Mask.IDLE) {
 
@@ -458,7 +501,7 @@ class SlidableLayout : FrameLayout, NestedScrollingChild2 {
             val directionMask =
                 if (direction == SlideDirection.Prev) Mask.PREV else Mask.NEXT
             val mockSpeed =
-                if (direction == SlideDirection.Prev) MIN_HIGH_SPEED else -MIN_HIGH_SPEED
+                if (direction == SlideDirection.Prev) mMinFlingSpeed else -mMinFlingSpeed
 
             mState =
                 if (adapter.canSlideTo(direction)) {
@@ -470,11 +513,17 @@ class SlidableLayout : FrameLayout, NestedScrollingChild2 {
 
             val canSlide = !(mState satisfy Mask.REJECT)
             log("Auto slide to $direction" + if (canSlide) "" else " but reject")
-            mGestureCallback.onUp(0f, mockSpeed, duration)
+            mGestureCallback.onUp(0f, mockSpeed)
             return canSlide
         }
         return false
     }
+
+    @Deprecated(
+        message = "Use slideTo(direction) instead.",
+        replaceWith = ReplaceWith("slideTo(direction)"))
+    fun slideTo(direction: SlideDirection, duration: Int) =
+        slideTo(direction)
 
     private inner class ViewHolderDelegate<ViewHolder : SlideViewHolder>(
         val adapter: SlideAdapter<ViewHolder>
