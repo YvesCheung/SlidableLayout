@@ -5,12 +5,6 @@ import android.animation.AnimatorListenerAdapter
 import android.animation.ValueAnimator
 import android.annotation.SuppressLint
 import android.content.Context
-import android.support.v4.app.Fragment
-import android.support.v4.app.FragmentManager
-import android.support.v4.view.NestedScrollingChild2
-import android.support.v4.view.NestedScrollingChildHelper
-import android.support.v4.view.ViewCompat
-import android.support.v4.view.ViewCompat.TYPE_NON_TOUCH
 import android.util.AttributeSet
 import android.util.Log
 import android.view.GestureDetector
@@ -22,6 +16,12 @@ import android.view.ViewGroup
 import android.view.animation.Interpolator
 import android.widget.FrameLayout
 import android.widget.Scroller
+import androidx.core.view.NestedScrollingChild2
+import androidx.core.view.NestedScrollingChildHelper
+import androidx.core.view.ViewCompat
+import androidx.core.view.ViewCompat.TYPE_NON_TOUCH
+import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentManager
 import kotlin.LazyThreadSafetyMode.NONE
 
 /**
