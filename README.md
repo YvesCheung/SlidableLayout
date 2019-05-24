@@ -149,12 +149,14 @@ class DemoFragment : Fragment(), SlidableUI {
     ```groovy
     dependencies {
         // Support library
+        // 如果使用的是Support包，添加以下依赖
         implementation 'com.github.YvesCheung:SlidableLayout:1.0.4'
-        implementation "com.android.support:support-fragment:$support_version"
+        //implementation "com.android.support:support-fragment:$support_version"
         
         // AndroidX
+        // 如果使用的是AndroidX，添加以下依赖
         implementation 'com.github.YvesCheung:SlidableLayout:1.0.4.x'
-        implementation "androidx.fragment:fragment:1.0.0"
+        //implementation "androidx.fragment:fragment:1.0.0"
     }
     ```
 
