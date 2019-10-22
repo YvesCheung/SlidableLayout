@@ -15,6 +15,7 @@ import android.view.ViewConfiguration
 import android.view.animation.Interpolator
 import android.widget.FrameLayout
 import android.widget.Scroller
+import androidx.annotation.IntDef
 import androidx.core.view.NestedScrollingChild2
 import androidx.core.view.NestedScrollingChildHelper
 import androidx.core.view.ViewCompat
