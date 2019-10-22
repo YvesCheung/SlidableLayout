@@ -6,7 +6,6 @@ import android.animation.ValueAnimator
 import android.annotation.SuppressLint
 import android.content.Context
 import android.support.v4.app.Fragment
-import android.support.v4.app.FragmentManager
 import android.support.v4.view.NestedScrollingChild2
 import android.support.v4.view.NestedScrollingChildHelper
 import android.support.v4.view.ViewCompat
@@ -18,19 +17,34 @@ import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewConfiguration
-import android.view.ViewGroup
 import android.view.animation.Interpolator
 import android.widget.FrameLayout
 import android.widget.Scroller
 import kotlin.LazyThreadSafetyMode.NONE
+import kotlin.math.abs
+import kotlin.math.min
+import kotlin.math.roundToInt
+import kotlin.math.sin
 
 /**
  * Created by 张宇 on 2019/4/11.
  * E-mail: zhangyu4@yy.com
  * YY: 909017428
  *
+ * Layout supports Sliding.
+ * Use the [setAdapter] to construct the view.
+ *
+ * The child view in the layout can implement the [SlidableUI] and listen to
+ * the callback method.
+ *
+ * @see SlideViewAdapter adapt to the sliding of [View].
+ * @see SlideFragmentAdapter adapt to the sliding of [Fragment].
+ *
+ * ——————————————————————————————————————————————————————————————————————————————
  * 支持上下滑的布局。
  * 使用 [setAdapter] 方法来构造上下滑切换的视图。
+ *
+ * 布局中的子视图可以实现[SlidableUI]方法，监听对应的回调方法。
  *
  * 可以直接对 [View] 进行上下滑，参考 [SlideAdapter] 或者 [SlideViewAdapter]。
  * 可以对 [Fragment] 进行上下滑，参考 [SlideFragmentAdapter]。
@@ -75,30 +89,37 @@ class SlidableLayout : FrameLayout, NestedScrollingChild2 {
 
     private enum class State(val flag: Int) {
         /**
+         * IDLE
          * 静止状态
          */
         IDLE(Mask.IDLE),
         /**
+         * Dragging to the next page
          * 正在向下一页拖动
          */
         SLIDE_NEXT(Mask.SLIDE or Mask.NEXT),
         /**
+         * Dragging to the previous page
          * 正在向上一页拖动
          */
         SLIDE_PREV(Mask.SLIDE or Mask.PREV),
         /**
+         * Can't drag to next page
          * 无法拖动到下一页
          */
         SLIDE_REJECT_NEXT(Mask.REJECT or Mask.SLIDE or Mask.NEXT),
         /**
+         * Can't drag to previous page
          * 无法拖动到上一页
          */
         SLIDE_REJECT_PREV(Mask.REJECT or Mask.SLIDE or Mask.PREV),
         /**
+         * Coasting to the next page
          * 手指离开，惯性滑行到下一页
          */
         FLING_NEXT(Mask.FLING or Mask.NEXT),
         /**
+         * Coasting to the previous page
          * 手指离开，惯性滑行到上一页
          */
         FLING_PREV(Mask.FLING or Mask.PREV);
@@ -116,12 +137,12 @@ class SlidableLayout : FrameLayout, NestedScrollingChild2 {
     }
 
     private object Mask {
-        const val IDLE = 0x000001
-        const val NEXT = 0x000010
-        const val PREV = 0x000100
-        const val SLIDE = 0x001000
-        const val FLING = 0x010000
-        const val REJECT = 0x100000
+        const val IDLE = 0b000001
+        const val NEXT = 0b000010
+        const val PREV = 0b000100
+        const val SLIDE = 0b001000
+        const val FLING = 0b010000
+        const val REJECT = 0b100000
     }
 
     private var mState = State.of(Mask.IDLE)
@@ -168,7 +189,7 @@ class SlidableLayout : FrameLayout, NestedScrollingChild2 {
             }
 
             val startToMove = mState satisfy Mask.IDLE &&
-                Math.abs(dyFromDownY) > 2 * Math.abs(dxFromDownX)
+                abs(dyFromDownY) > 2 * abs(dxFromDownX)
             val changeDirectionToNext = mState satisfy Mask.PREV && dyFromDownY < 0
             val changeDirectionToPrev = mState satisfy Mask.NEXT && dyFromDownY > 0
 
@@ -369,8 +390,8 @@ class SlidableLayout : FrameLayout, NestedScrollingChild2 {
                 startNestedScroll(ViewCompat.SCROLL_AXIS_VERTICAL)
             }
             MotionEvent.ACTION_MOVE -> {
-                val dy = Math.abs(event.y - downY)
-                val dx = Math.abs(event.x - downX)
+                val dy = abs(event.y - downY)
+                val dx = abs(event.x - downX)
                 if (dy > mTouchSlop && dy > 2 * dx) {
                     log("onInterceptTouchEvent requestDisallow")
                     requestParentDisallowInterceptTouchEvent()
@@ -392,22 +413,22 @@ class SlidableLayout : FrameLayout, NestedScrollingChild2 {
             var t: Double = f.toDouble()
             t -= 0.5 // center the values about 0.
             t *= 0.3 * Math.PI / 2.0
-            return Math.sin(t).toFloat()
+            return sin(t).toFloat()
         }
 
         val half = maxDistance / 2
         val distanceRatio = Math.min(1f, Math.abs(currentDistance).toFloat() / maxDistance)
         val distance = half + half * distanceInfluenceForSnapDuration(distanceRatio)
 
-        val v = Math.abs(velocity)
+        val v = abs(velocity)
         val duration: Int =
             if (v > 0) {
-                4 * Math.round(1000 * Math.abs(distance / v))
+                4 * (1000 * abs(distance / v)).roundToInt()
             } else {
-                val pageDelta = Math.abs(currentDistance).toFloat() / maxDistance
+                val pageDelta = abs(currentDistance).toFloat() / maxDistance
                 ((pageDelta + 1f) * 100).toInt()
             }
-        return Math.min(duration, MAX_DURATION)
+        return min(duration, MAX_DURATION)
     }
 
     private fun requestParentDisallowInterceptTouchEvent() {
@@ -468,7 +489,10 @@ class SlidableLayout : FrameLayout, NestedScrollingChild2 {
     }
 
     /**
-     * 设置适配器。
+     * Set a new adapter to provide child views.
+     *
+     * @see SlideViewAdapter
+     * @see SlideFragmentAdapter
      */
     fun setAdapter(adapter: SlideAdapter<out SlideViewHolder>) {
         removeAllViews()
@@ -479,12 +503,16 @@ class SlidableLayout : FrameLayout, NestedScrollingChild2 {
     }
 
     /**
+     * Automatically slide the view in the [direction] direction.
+     * This method will work when and only when the current state is [State.IDLE].
+     *
+     * ————————————————————————————————————————————————————————————————————————————————————————
      * 自动滑到 [direction] 方向的视图。
      * 当且仅当布局处于静止状态时有效。
      *
-     * @param direction 滑行方向：[SlideDirection.Next] 或 [SlideDirection.Prev]
+     * @param direction the slide direction：[SlideDirection.Next] or [SlideDirection.Prev]
      *
-     * @return true 表示开始滑动
+     * @return true if successfully sliding.
      */
     fun slideTo(direction: SlideDirection): Boolean {
         if (direction != SlideDirection.Origin &&
@@ -497,7 +525,7 @@ class SlidableLayout : FrameLayout, NestedScrollingChild2 {
             startNestedScroll(ViewCompat.SCROLL_AXIS_VERTICAL, TYPE_NON_TOUCH)
             requestParentDisallowInterceptTouchEvent()
 
-            //模拟在该方向上，以 mockSpeed 的速度滑行
+            //Simulate sliding at a [mockSpeed] in this direction
             val directionMask =
                 if (direction == SlideDirection.Prev) Mask.PREV else Mask.NEXT
             val mockSpeed =
@@ -578,304 +606,4 @@ class SlidableLayout : FrameLayout, NestedScrollingChild2 {
             backupViewHolder = tmp
         }
     }
-}
-
-/**
- * 适配 [SlidableLayout] 以及布局中滑动的 [View] 。
- *
- * 假如首次初始化页面【A】，触发的回调是：
- * - onCreateViewHolder(context, inflater)
- * - onViewComplete(viewHolder【A】)
- *
- * 假如从页面【A】滑动下一个页面【B】，触发的回调将会是：
- *
- * - canSlideTo(SlideDirection.Next)
- * - onCreateViewHolder(context, inflater) (如果是首次滑动)
- * - onBindView(viewHolder【B】, SlideDirection.Next)
- * - onViewDismiss(viewHolder【A】, SlideDirection.Next)
- * - onViewComplete(viewHolder【B】)
- * - finishSlide(SlideDirection.Next)
- *
- * 假如再从页面【B】 滑动回上一个页面 【A】，触发的回调是：
- *
- * - canSlideTo(SlideDirection.Prev)
- * - onBindView(viewHolder【A】, SlideDirection.Prev)
- * - onViewDismiss(viewHolder【B】, SlideDirection.Prev)
- * - onViewComplete(viewHolder【A】)
- * - finishSlide(SlideDirection.Prev)
- *
- * 假如从页面【A】试图滑动到页面【B】，但距离或者速度不够，所以放手后回弹到【A】，触发的回调是：
- *
- * - canSlideTo(SlideDirection.Next)
- * - onBindView(viewHolder【B】, SlideDirection.Next)
- * - onViewDismiss(viewHolder【B】, SlideDirection.Next)
- * - finishSlide(SlideDirection.Origin)
- */
-interface SlideAdapter<ViewHolder : SlideViewHolder> {
-
-    /**
-     * 能否向 [direction] 的方向滑动。
-     *
-     * @param direction 滑动的方向
-     *
-     * @return 返回 true 表示可以滑动， false 表示不可滑动。
-     * 如果有嵌套其他外层滑动布局（比如下拉刷新），当且仅当返回 false 时会触发外层的嵌套滑动。
-     */
-    fun canSlideTo(direction: SlideDirection): Boolean
-
-    /**
-     * 创建持有 [View] 的 [SlideViewHolder] 。
-     * 一般来说，该方法会在 [SlidableLayout.setAdapter] 方法调用时触发一次，创建当前显示的 [View]，
-     * 会在首次开始滑动时触发第二次，创建滑动目标的 [View]。
-     */
-    fun onCreateViewHolder(context: Context, parent: ViewGroup, inflater: LayoutInflater): ViewHolder
-
-    /**
-     * 当 [View] 开始滑动到可见时触发，在这个方法中实现数据和 [View] 的绑定。
-     *
-     * @param viewHolder 持有 [View] 的 [SlideViewHolder]
-     * @param direction  滑动的方向
-     */
-    fun onBindView(viewHolder: ViewHolder, direction: SlideDirection)
-
-    /**
-     * 当 [View] 完全出现时触发。
-     * 这个时机可能是 [SlidableLayout.setAdapter] 后 [View] 的第一次初始化，
-     * 也可能是完成一次滑动，在 [finishSlide] 后 **而且** 滑到了一个新的 [View]。
-     *
-     * 也就是说，如果 [finishSlide] 的 [SlideDirection] 是 [SlideDirection.Origin] ，
-     * 也就是滑动回弹到本来的界面上，是不会触发 [onViewComplete] 的。
-     *
-     * 在这个方法中实现当 [View] 第一次完全出现时才做的业务。比如开始播放视频。
-     *
-     * @param viewHolder 持有 [View] 的 [SlideViewHolder]
-     */
-    fun onViewComplete(viewHolder: ViewHolder, direction: SlideDirection) {}
-
-    /**
-     * 当滑动完成时，离开的 [View] 会触发，在这个方法中实现对 [View] 的清理。
-     *
-     * @param viewHolder 持有 [View] 的 [SlideViewHolder]
-     * @param direction  滑动的方向
-     */
-    fun onViewDismiss(viewHolder: ViewHolder, parent: ViewGroup, direction: SlideDirection) {}
-
-    /**
-     * 当滑动完成时触发。
-     *
-     * @param direction 滑动的方向
-     */
-    fun finishSlide(dismissViewHolder: ViewHolder, visibleViewHolder: ViewHolder, direction: SlideDirection) {}
-}
-
-open class SlideViewHolder(val view: View)
-
-abstract class SlideViewAdapter : SlideAdapter<SlideViewHolder> {
-
-    /**
-     * 创建 [View] 。
-     * 一般来说，该方法会在 [SlidableLayout.setAdapter] 方法调用时触发一次，创建当前显示的 [View]，
-     * 会在首次开始滑动时触发第二次，创建滑动目标的 [View]。
-     */
-    protected abstract fun onCreateView(context: Context, parent: ViewGroup, inflater: LayoutInflater): View
-
-    /**
-     * 当 [view] 开始滑动到可见时触发，在这个方法中实现数据和 [view] 的绑定。
-     *
-     * @param direction  滑动的方向
-     */
-    protected abstract fun onBindView(view: View, direction: SlideDirection)
-
-    /**
-     * 当滑动完成时触发。
-     *
-     * @param direction 滑动的方向
-     */
-    protected open fun finishSlide(direction: SlideDirection) {}
-
-    /**
-     * 当滑动完成时触发。
-     *
-     * @param direction 滑动的方向
-     */
-    protected open fun finishSlide(dismissView: View, visibleView: View, direction: SlideDirection) {}
-
-    /**
-     * 当滑动完成时，离开的 [view] 会触发，在这个方法中实现对 [view] 的清理。
-     *
-     * @param direction  滑动的方向
-     */
-    protected open fun onViewDismiss(view: View, parent: ViewGroup, direction: SlideDirection) {
-        parent.removeView(view)
-    }
-
-    /**
-     * 当 [view] 完全出现时触发。
-     * 这个时机可能是 [SlidableLayout.setAdapter] 后 [view] 的第一次初始化，
-     * 也可能是完成一次滑动，在 [finishSlide] 后 **而且** 滑到了一个新的 [view]。
-     *
-     * 也就是说，如果 [finishSlide] 的 [SlideDirection] 是 [SlideDirection.Origin] ，
-     * 也就是滑动回弹到本来的界面上，是不会触发 [onViewComplete] 的。
-     *
-     * 在这个方法中实现当 [view] 第一次完全出现时才做的业务。比如开始播放视频。
-     */
-    protected open fun onViewComplete(view: View, direction: SlideDirection) {}
-
-    final override fun onCreateViewHolder(context: Context, parent: ViewGroup, inflater: LayoutInflater): SlideViewHolder {
-        return SlideViewHolder(onCreateView(context, parent, inflater))
-    }
-
-    final override fun onBindView(viewHolder: SlideViewHolder, direction: SlideDirection) {
-        val v = viewHolder.view
-        onBindView(v, direction)
-        if (v is SlidableUI) {
-            v.startVisible(direction)
-        }
-    }
-
-    final override fun onViewDismiss(viewHolder: SlideViewHolder, parent: ViewGroup, direction: SlideDirection) {
-        val v = viewHolder.view
-        if (v is SlidableUI) {
-            v.invisible(direction)
-        }
-        onViewDismiss(v, parent, direction)
-    }
-
-    final override fun onViewComplete(viewHolder: SlideViewHolder, direction: SlideDirection) {
-        val v = viewHolder.view
-        onViewComplete(v, direction)
-        if (v is SlidableUI) {
-            v.completeVisible(direction)
-        }
-    }
-
-    final override fun finishSlide(dismissViewHolder: SlideViewHolder, visibleViewHolder: SlideViewHolder, direction: SlideDirection) {
-        finishSlide(direction)
-        finishSlide(dismissViewHolder.view, visibleViewHolder.view, direction)
-        if (dismissViewHolder.view is SlidableUI) {
-            dismissViewHolder.view.preload(direction)
-        }
-    }
-}
-
-abstract class SlideFragmentAdapter(private val fm: FragmentManager) : SlideAdapter<FragmentViewHolder> {
-
-    private val viewHolderList = mutableListOf<FragmentViewHolder>()
-
-    /**
-     * 创建要显示的 [Fragment]。
-     * 一般来说，该方法会在 [SlidableLayout.setAdapter] 调用时触发一次，创建当前显示的 [Fragment]，
-     * 会在首次开始滑动时触发第二次，创建滑动目标的 [Fragment]。
-     */
-    abstract fun onCreateFragment(context: Context): Fragment
-
-    protected open fun onBindFragment(fragment: Fragment, direction: SlideDirection) {}
-
-    protected open fun finishSlide(direction: SlideDirection) {}
-
-    final override fun onCreateViewHolder(context: Context, parent: ViewGroup, inflater: LayoutInflater): FragmentViewHolder {
-        val viewGroup = FrameLayout(context)
-        viewGroup.id = ViewCompat.generateViewId()
-        val fragment = onCreateFragment(context)
-        fm.beginTransaction().add(viewGroup.id, fragment).commitAllowingStateLoss()
-        val viewHolder = FragmentViewHolder(viewGroup, fragment)
-        viewHolderList.add(viewHolder)
-        return viewHolder
-    }
-
-    final override fun onBindView(viewHolder: FragmentViewHolder, direction: SlideDirection) {
-        val fragment = viewHolder.f
-        fm.beginTransaction().show(fragment).commitAllowingStateLoss()
-        viewHolder.view.post {
-            onBindFragment(fragment, direction)
-            if (fragment is SlidableUI) {
-                fragment.startVisible(direction)
-            }
-        }
-    }
-
-    final override fun onViewComplete(viewHolder: FragmentViewHolder, direction: SlideDirection) {
-        val fragment = viewHolder.f
-        fragment.setMenuVisibility(true)
-        fragment.userVisibleHint = true
-        if (fragment is SlidableUI) {
-            fragment.completeVisible(direction)
-        }
-
-        viewHolderList.filter { it != viewHolder }.forEach {
-            val otherFragment = it.f
-            otherFragment.setMenuVisibility(false)
-            otherFragment.userVisibleHint = false
-        }
-    }
-
-    final override fun onViewDismiss(viewHolder: FragmentViewHolder, parent: ViewGroup, direction: SlideDirection) {
-        val fragment = viewHolder.f
-        fm.beginTransaction().hide(fragment).commitAllowingStateLoss()
-        if (fragment is SlidableUI) {
-            fragment.invisible(direction)
-        }
-    }
-
-    final override fun finishSlide(dismissViewHolder: FragmentViewHolder, visibleViewHolder: FragmentViewHolder, direction: SlideDirection) {
-        finishSlide(direction)
-        if (dismissViewHolder.f is SlidableUI) {
-            dismissViewHolder.f.preload(direction)
-        }
-    }
-}
-
-class FragmentViewHolder(v: ViewGroup, val f: Fragment) : SlideViewHolder(v)
-
-enum class SlideDirection {
-    /**
-     * 滑到下一个
-     */
-    Next {
-        override fun moveTo(index: Int): Int = index + 1
-    },
-    /**
-     * 滑到上一个
-     */
-    Prev {
-        override fun moveTo(index: Int): Int = index - 1
-    },
-    /**
-     * 回到原点
-     */
-    Origin {
-        override fun moveTo(index: Int): Int = index
-    };
-
-    /**
-     * 计算index的变化
-     */
-    abstract fun moveTo(index: Int): Int
-}
-
-interface SlidableUI {
-
-    /**
-     * 滑动开始，当前视图将要可见
-     * 可以在该回调中实现数据与视图的绑定，比如显示占位的图片
-     */
-    fun startVisible(direction: SlideDirection) {}
-
-    /**
-     * 滑动完成，当前视图完全可见
-     * 可以在该回调中开始主业务，比如开始播放视频，比如广告曝光统计
-     */
-    fun completeVisible(direction: SlideDirection) {}
-
-    /**
-     * 滑动完成，当前视图完全不可见
-     * 可以在该回调中做一些清理工作，比如关闭播放器
-     */
-    fun invisible(direction: SlideDirection) {}
-
-    /**
-     *  已经完成了一次 direction 方向的滑动，用户很可能会在这个方向上继续滑动
-     *  可以在该回调中实现下一次滑动的预加载，比如开始下载下一个视频或者准备好封面图
-     */
-    fun preload(direction: SlideDirection) {}
 }
