@@ -81,6 +81,17 @@ class SlidableLayout : FrameLayout, NestedScrollingChild2 {
 
     @OrientationMode
     var orientation: Int = VERTICAL
+        set(value) {
+            if (value != HORIZONTAL && value != VERTICAL) {
+                throw IllegalArgumentException(
+                    "orientation should be 'SlidableLayout.HORIZONTAL' or 'SlidableLayout.VERTICAL'.")
+            }
+            if (mState != State.IDLE) {
+                throw IllegalStateException(
+                    "Can't change orientation when the layout is not IDLE.")
+            }
+            field = value
+        }
 
     private val mMinFlingSpeed: Float //定义滑动速度足够快的标准
 
@@ -782,9 +793,7 @@ class SlidableLayout : FrameLayout, NestedScrollingChild2 {
         }
 
         override fun isFling(offsetX: Int, offsetY: Int, velocityX: Float, velocityY: Float): Boolean {
-            val highSpeed =
-                (orientation == VERTICAL && abs(velocityY) >= mMinFlingSpeed) ||
-                    (orientation == HORIZONTAL && abs(velocityX) >= mMinFlingSpeed)
+            val highSpeed = abs(velocityY) >= mMinFlingSpeed
 
             val sameDirection =
                 (mState == State.SLIDE_NEXT && velocityY < 0) ||
