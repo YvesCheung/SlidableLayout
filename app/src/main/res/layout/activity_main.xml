@@ -1,36 +1,67 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:padding="10dp">
 
-    <Button
+    <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_margin="10dp"
+        android:background="@color/colorAccent"
+        android:gravity="center"
         android:onClick="toDemoForFragment"
-        android:text="上下滑切换Fragment示例" />
+        android:padding="10dp"
+        android:text="Example: Sliding To Switch Fragment"
+        android:textColor="#ffffff"
+        android:textStyle="bold" />
 
-    <Button
+    <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_margin="10dp"
+        android:background="@color/colorAccent"
+        android:gravity="center"
         android:onClick="toDemoForView"
-        android:text="上下滑切换View示例" />
+        android:padding="10dp"
+        android:text="Example: Sliding To Switch View"
+        android:textColor="#ffffff"
+        android:textStyle="bold" />
 
-    <Button
+    <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_margin="10dp"
+        android:background="@color/colorAccent"
+        android:gravity="center"
         android:onClick="toDemoForLoop"
-        android:text="无限循环示例" />
+        android:padding="10dp"
+        android:text="Example: Infinite sliding"
+        android:textColor="#ffffff"
+        android:textStyle="bold" />
 
-    <Button
+    <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_margin="10dp"
+        android:background="@color/colorAccent"
+        android:gravity="center"
+        android:onClick="toDemoForLoopHorizontally"
+        android:padding="10dp"
+        android:text="Example: Infinite Slide Horizontally"
+        android:textColor="#ffffff"
+        android:textStyle="bold" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="10dp"
+        android:background="@color/colorAccent"
+        android:gravity="center"
         android:onClick="toDemoForAutoSlide"
-        android:text="自动滑动示例" />
+        android:padding="10dp"
+        android:text="Example: Auto Slide"
+        android:textColor="#ffffff"
+        android:textStyle="bold" />
 </LinearLayout>

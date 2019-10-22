@@ -17,13 +17,14 @@ import kotlinx.android.synthetic.main.activity_demo.*
  * E-mail: zhangyu4@yy.com
  * YY: 909017428
  */
+@Suppress("MemberVisibilityCanBePrivate")
 abstract class BaseDemoActivity : FragmentActivity() {
 
-    private val dataList = SimpleListQueue<PageInfo>()
+    protected val dataList = SimpleListQueue<PageInfo>()
 
-    private val repo = PageInfoRepository()
+    protected val repo = PageInfoRepository()
 
-    private var offset = 0
+    protected var offset = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -44,11 +45,11 @@ abstract class BaseDemoActivity : FragmentActivity() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
             window.decorView.systemUiVisibility =
                 View.SYSTEM_UI_FLAG_FULLSCREEN or
-                View.SYSTEM_UI_FLAG_LAYOUT_STABLE or
-                View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY or
-                View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION or
-                View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or
-                View.SYSTEM_UI_FLAG_LOW_PROFILE
+                    View.SYSTEM_UI_FLAG_LAYOUT_STABLE or
+                    View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY or
+                    View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION or
+                    View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or
+                    View.SYSTEM_UI_FLAG_LOW_PROFILE
         }
         requestWindowFeature(Window.FEATURE_NO_TITLE)
         window.addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
@@ -72,7 +73,7 @@ abstract class BaseDemoActivity : FragmentActivity() {
             }
     }
 
-    private fun requestDataAndAddToAdapter(insertToFirst: Boolean = true, delayMills: Long = 0L) {
+    protected fun requestDataAndAddToAdapter(insertToFirst: Boolean = true, delayMills: Long = 0L) {
         repo.requestPageInfo(offset, pageSize, delayMills) { result, isLastPage ->
             if (insertToFirst) {
                 dataList.addFirst(result)
@@ -89,7 +90,7 @@ abstract class BaseDemoActivity : FragmentActivity() {
 
     protected abstract fun createAdapter(data: SimpleQueue<PageInfo>): SlideAdapter<out SlideViewHolder>
 
-    private class SimpleListQueue<Element>(
+    protected class SimpleListQueue<Element>(
         private val actual: MutableList<Element> = mutableListOf()
     ) : SimpleQueue<Element>, List<Element> by actual {
 
