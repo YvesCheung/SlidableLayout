@@ -148,11 +148,19 @@ class DemoFragment : Fragment(), SlidableUI {
 2. 对应要使用的模块中添加依赖
     ```groovy
     dependencies {
-        implementation 'com.github.YvesCheung:SlidableLayout:x.y.z'
+        // Support library
+        // 如果使用的是Support包，添加以下依赖
+        implementation 'com.github.YvesCheung:SlidableLayout:1.0.4'
+        //implementation "com.android.support:support-fragment:$support_version"
+        
+        // AndroidX
+        // 如果使用的是AndroidX，添加以下依赖
+        implementation 'com.github.YvesCheung:SlidableLayout:1.0.4.x'
+        //implementation "androidx.fragment:fragment:1.0.0"
     }
     ```
-    其中 `x.y.z` 版本为 [![](https://jitpack.io/v/YvesCheung/SlidableLayout.svg)](https://jitpack.io/#YvesCheung/SlidableLayout)
-    
+
+
 ## 许可证
 
     Copyright 2019 YvesCheung
