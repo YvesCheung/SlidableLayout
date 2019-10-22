@@ -24,6 +24,10 @@ class MainActivity : FragmentActivity() {
         startActivity(Intent(this, DemoForLoop::class.java))
     }
 
+    fun toDemoForLoopHorizontally(v: View) {
+        startActivity(Intent(this, DemoForLoopHorizontally::class.java))
+    }
+
     fun toDemoForAutoSlide(v: View) {
         startActivity(Intent(this, DemoForAutoSlide::class.java))
     }

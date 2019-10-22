@@ -9,7 +9,6 @@ import com.yy.mobile.widget.SlideAdapter
 import com.yy.mobile.widget.SlideDirection
 import com.yy.mobile.widget.SlideViewAdapter
 import com.yy.mobile.widget.SlideViewHolder
-import kotlinx.android.synthetic.main.page_main_content.*
 import kotlinx.android.synthetic.main.page_main_content.view.*
 
 /**
@@ -17,7 +16,7 @@ import kotlinx.android.synthetic.main.page_main_content.view.*
  * E-mail: zhangyu4@yy.com
  * YY: 909017428
  */
-class DemoForLoop : BaseDemoActivity() {
+open class DemoForLoop : BaseDemoActivity() {
 
     override fun createAdapter(data: SimpleQueue<PageInfo>): SlideAdapter<out SlideViewHolder> =
         LoopAdapter(data)

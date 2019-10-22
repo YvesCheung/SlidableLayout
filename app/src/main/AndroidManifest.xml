@@ -20,6 +20,7 @@
         <activity android:name=".DemoForFragment" />
         <activity android:name=".DemoForView" />
         <activity android:name=".DemoForLoop" />
+        <activity android:name=".DemoForLoopHorizontally" />
         <activity android:name=".DemoForAutoSlide" />
     </application>
 
