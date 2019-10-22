@@ -20,7 +20,6 @@ import androidx.core.view.NestedScrollingChildHelper
 import androidx.core.view.ViewCompat
 import androidx.core.view.ViewCompat.TYPE_NON_TOUCH
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.FragmentManager
 import kotlin.LazyThreadSafetyMode.NONE
 import kotlin.math.abs
 import kotlin.math.min
