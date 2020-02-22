@@ -468,10 +468,19 @@ class SlidableLayout : FrameLayout, NestedScrollingChild2 {
     private inner class Observer : SlidableDataObserver {
 
         override fun onChanged() {
+            assertNotInLayoutOrScroll()
             mViewHolderDelegate?.apply {
                 prepareCurrent(SlideDirection.Origin)
                 onCompleteCurrent(SlideDirection.Origin, true)
             }
+        }
+
+        private fun assertNotInLayoutOrScroll() {
+            if (mState satisfy Mask.IDLE || mState satisfy Mask.REJECT) {
+                return
+            }
+            throw IllegalStateException("Cannot call this method while RecyclerView is "
+                + "computing a layout or scrolling")
         }
     }
 
