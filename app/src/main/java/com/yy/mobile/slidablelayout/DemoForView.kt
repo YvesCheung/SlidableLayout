@@ -16,7 +16,7 @@ import kotlinx.android.synthetic.main.page_main_content.view.*
  * E-mail: zhangyu4@yy.com
  * YY: 909017428
  */
-class DemoForView : BaseDemoActivity() {
+open class DemoForView : BaseDemoActivity() {
 
     override fun createAdapter(data: SimpleQueue<PageInfo>): SlideAdapter<out SlideViewHolder> =
         DemoViewAdapter(data)

@@ -20,7 +20,7 @@ import kotlinx.android.synthetic.main.activity_demo.*
 @Suppress("MemberVisibilityCanBePrivate")
 abstract class BaseDemoActivity : FragmentActivity() {
 
-    protected val dataList = SimpleListQueue<PageInfo>()
+    protected open val dataList = SimpleListQueue<PageInfo>()
 
     protected val repo = PageInfoRepository()
 
@@ -73,7 +73,10 @@ abstract class BaseDemoActivity : FragmentActivity() {
             }
     }
 
-    protected fun requestDataAndAddToAdapter(insertToFirst: Boolean = true, delayMills: Long = 0L) {
+    protected open fun requestDataAndAddToAdapter(
+        insertToFirst: Boolean = true,
+        delayMills: Long = 0L
+    ) {
         repo.requestPageInfo(offset, pageSize, delayMills) { result, isLastPage ->
             if (insertToFirst) {
                 dataList.addFirst(result)
@@ -90,18 +93,18 @@ abstract class BaseDemoActivity : FragmentActivity() {
 
     protected abstract fun createAdapter(data: SimpleQueue<PageInfo>): SlideAdapter<out SlideViewHolder>
 
-    protected class SimpleListQueue<Element>(
-        private val actual: MutableList<Element> = mutableListOf()
+    protected open class SimpleListQueue<Element>(
+        protected val actual: MutableList<Element> = mutableListOf()
     ) : SimpleQueue<Element>, List<Element> by actual {
 
-        private var curIdx = 0
+        protected var curIdx = 0
 
-        fun addFirst(data: List<Element>) {
+        open fun addFirst(data: List<Element>) {
             actual.addAll(0, data)
             curIdx += data.size
         }
 
-        fun addLast(data: List<Element>) {
+        open fun addLast(data: List<Element>) {
             actual.addAll(data)
         }
 

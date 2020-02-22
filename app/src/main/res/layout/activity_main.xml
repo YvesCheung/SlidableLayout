@@ -64,4 +64,16 @@
         android:text="Example: Auto Slide"
         android:textColor="#ffffff"
         android:textStyle="bold" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="10dp"
+        android:background="@color/colorAccent"
+        android:gravity="center"
+        android:onClick="toDemoForDataSetChanged"
+        android:padding="10dp"
+        android:text="Example: NotifyDataSetChanged"
+        android:textColor="#ffffff"
+        android:textStyle="bold" />
 </LinearLayout>
