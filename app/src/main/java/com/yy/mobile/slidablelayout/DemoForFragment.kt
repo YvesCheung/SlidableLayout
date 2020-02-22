@@ -21,7 +21,7 @@ import kotlinx.android.synthetic.main.page_main_content.*
  * E-mail: zhangyu4@yy.com
  * YY: 909017428
  */
-class DemoForFragment : BaseDemoActivity() {
+open class DemoForFragment : BaseDemoActivity() {
 
     override fun createAdapter(data: SimpleQueue<PageInfo>): SlideAdapter<out SlideViewHolder> =
         FragmentAdapter(data, supportFragmentManager)

@@ -28,10 +28,6 @@ import kotlin.math.roundToInt
 import kotlin.math.sin
 
 /**
- * Created by 张宇 on 2019/4/11.
- * E-mail: zhangyu4@yy.com
- * YY: 909017428
- *
  * Layout supports Sliding.
  * Use the [setAdapter] to construct the view.
  *
@@ -50,7 +46,10 @@ import kotlin.math.sin
  * 可以直接对 [View] 进行上下滑，参考 [SlideAdapter] 或者 [SlideViewAdapter]。
  * 可以对 [Fragment] 进行上下滑，参考 [SlideFragmentAdapter]。
  *
+ * @author YvesCheung
+ * 2019/4/11
  */
+@Suppress("MemberVisibilityCanBePrivate")
 class SlidableLayout : FrameLayout, NestedScrollingChild2 {
 
     constructor(context: Context) : this(context, null)
@@ -101,6 +100,9 @@ class SlidableLayout : FrameLayout, NestedScrollingChild2 {
     private val childHelper = NestedScrollingChildHelper(this)
 
     private val mTouchSlop: Int
+
+    private val mDataObservable = SlidableDataObservable()
+    private val mDataObserver = Observer()
 
     init {
         val configuration = ViewConfiguration.get(context)
@@ -314,11 +316,18 @@ class SlidableLayout : FrameLayout, NestedScrollingChild2 {
      * @see SlideViewAdapter
      * @see SlideFragmentAdapter
      */
-    fun setAdapter(adapter: SlideAdapter<out SlideViewHolder>) {
-        removeAllViews()
-        mViewHolderDelegate = ViewHolderDelegate(adapter).apply {
-            prepareCurrent(SlideDirection.Origin)
-            onCompleteCurrent(SlideDirection.Origin, true)
+    fun setAdapter(adapter: SlideAdapter<out SlideViewHolder>?) {
+        if (mViewHolderDelegate != null) {
+            removeAllViews()
+            unregisterDataSetObserver(mDataObserver)
+        }
+        if (adapter != null) {
+            mViewHolderDelegate =
+                ViewHolderDelegate(adapter).apply {
+                    prepareCurrent(SlideDirection.Origin)
+                    onCompleteCurrent(SlideDirection.Origin, true)
+                }
+            registerDataSetObserver(mDataObserver)
         }
     }
 
@@ -377,6 +386,31 @@ class SlidableLayout : FrameLayout, NestedScrollingChild2 {
     fun slideTo(direction: SlideDirection, duration: Int) =
         slideTo(direction)
 
+    /**
+     * Register a new observer to listen for data changes.
+     *
+     * @see unregisterDataSetObserver
+     */
+    fun registerDataSetObserver(observer: SlidableDataObserver) {
+        mDataObservable.registerObserver(observer)
+    }
+
+    /**
+     * Unregister an observer currently listening for data changes.
+     *
+     * @see registerDataSetObserver
+     */
+    fun unregisterDataSetObserver(observer: SlidableDataObserver) {
+        mDataObservable.unregisterObserver(observer)
+    }
+
+    /**
+     * Notify any registered observers that the data set has changed.
+     */
+    fun notifyDataSetChanged() {
+        mDataObservable.notifyDataSetChanged()
+    }
+
     private inner class ViewHolderDelegate<ViewHolder : SlideViewHolder>(
         val adapter: SlideAdapter<ViewHolder>
     ) {
@@ -428,6 +462,16 @@ class SlidableLayout : FrameLayout, NestedScrollingChild2 {
             val tmp = currentViewHolder
             currentViewHolder = backupViewHolder
             backupViewHolder = tmp
+        }
+    }
+
+    private inner class Observer : SlidableDataObserver {
+
+        override fun onChanged() {
+            mViewHolderDelegate?.apply {
+                prepareCurrent(SlideDirection.Origin)
+                onCompleteCurrent(SlideDirection.Origin, true)
+            }
         }
     }
 

@@ -1,9 +1,8 @@
 package com.yy.mobile.widget
 
 /**
- * Created by 张宇 on 2019-10-21.
- * E-mail: zhangyu4@yy.com
- * YY: 909017428
+ * @author YvesCheung
+ * 2019-10-21
  */
 enum class SlideDirection {
     /**
