@@ -9,8 +9,11 @@ import android.support.annotation.IntDef
 import android.support.v4.app.Fragment
 import android.support.v4.view.NestedScrollingChild2
 import android.support.v4.view.NestedScrollingChildHelper
+import android.support.v4.view.NestedScrollingParent2
+import android.support.v4.view.NestedScrollingParentHelper
 import android.support.v4.view.ViewCompat
 import android.support.v4.view.ViewCompat.TYPE_NON_TOUCH
+import android.support.v4.view.ViewCompat.TYPE_TOUCH
 import android.util.AttributeSet
 import android.util.Log
 import android.view.GestureDetector
@@ -50,7 +53,7 @@ import kotlin.math.sin
  * 2019/4/11
  */
 @Suppress("MemberVisibilityCanBePrivate")
-class SlidableLayout : FrameLayout, NestedScrollingChild2 {
+class SlidableLayout : FrameLayout, NestedScrollingChild2, NestedScrollingParent2 {
 
     constructor(context: Context) : this(context, null)
 
@@ -66,7 +69,7 @@ class SlidableLayout : FrameLayout, NestedScrollingChild2 {
         const val HORIZONTAL = 0
         const val VERTICAL = 1
 
-        private const val DEBUG = true
+        private const val DEBUG = false
 
         private const val MIN_FLING_VELOCITY = 400 // dips
 
@@ -78,7 +81,7 @@ class SlidableLayout : FrameLayout, NestedScrollingChild2 {
         }
     }
 
-    @IntDef(value = [HORIZONTAL, VERTICAL], flag = true)
+    @IntDef(value = [HORIZONTAL, VERTICAL])
     annotation class OrientationMode
 
     @OrientationMode
@@ -98,6 +101,7 @@ class SlidableLayout : FrameLayout, NestedScrollingChild2 {
     private val mMinFlingSpeed: Float //定义滑动速度足够快的标准
 
     private val childHelper = NestedScrollingChildHelper(this)
+    private val parentHelper = NestedScrollingParentHelper(this)
 
     private val mTouchSlop: Int
 
@@ -189,10 +193,10 @@ class SlidableLayout : FrameLayout, NestedScrollingChild2 {
 
     private var mViewHolderDelegate: ViewHolderDelegate<out SlideViewHolder>? = null
 
-    private val mCurrentView: View?
+    private inline val mCurrentView: View?
         get() = mViewHolderDelegate?.currentViewHolder?.view
 
-    private val mBackupView: View?
+    private inline val mBackupView: View?
         get() = mViewHolderDelegate?.backupViewHolder?.view
 
     private var downY = 0f
@@ -201,9 +205,18 @@ class SlidableLayout : FrameLayout, NestedScrollingChild2 {
     private var mScrollConsumed: IntArray = IntArray(2)
     private var mScrollOffset: IntArray = IntArray(2)
 
-    private val mGestureCallback = GestureCallback(HorizontalMode(), VerticalMode())
+    private val mGestureCallback = GestureCallback()
+    private val mHorizontalGesture = HorizontalMode()
+    private val mVerticalGesture = VerticalMode()
+    private inline val mGesture
+        get() = if (orientation == HORIZONTAL) mHorizontalGesture else mVerticalGesture
+
+    private inline val mScrollAxis
+        get() = if (orientation == HORIZONTAL) ViewCompat.SCROLL_AXIS_HORIZONTAL else ViewCompat.SCROLL_AXIS_VERTICAL
 
     private val gestureDetector = GestureDetector(context, mGestureCallback)
+
+    private var shouldDetermineIfStartNestedScroll = false
 
     @SuppressLint("ClickableViewAccessibility")
     override fun onTouchEvent(event: MotionEvent): Boolean {
@@ -304,6 +317,146 @@ class SlidableLayout : FrameLayout, NestedScrollingChild2 {
 
     override fun dispatchNestedPreFling(velocityX: Float, velocityY: Float) =
         childHelper.dispatchNestedPreFling(velocityX, velocityY)
+
+    override fun onNestedScrollAccepted(child: View, target: View, axes: Int) =
+        parentHelper.onNestedScrollAccepted(child, target, axes)
+
+    override fun onNestedScrollAccepted(child: View, target: View, axes: Int, type: Int) =
+        parentHelper.onNestedScrollAccepted(child, target, axes, type)
+
+    override fun getNestedScrollAxes(): Int = parentHelper.nestedScrollAxes
+
+    override fun onStopNestedScroll(child: View) {
+        log("onStopNestedScroll")
+        val topView = mCurrentView
+        val backView = mBackupView
+        if (mState satisfy Mask.SLIDE && topView != null && backView != null) {
+            mGestureCallback.performFling(topView, backView, 0f, 0f)
+        } else if (!(mState satisfy Mask.FLING)) {
+            mState = State.IDLE
+        }
+        shouldDetermineIfStartNestedScroll = false
+        stopNestedScroll()
+        parentHelper.onStopNestedScroll(child)
+    }
+
+    override fun onStopNestedScroll(child: View, type: Int) = onStopNestedScroll(child)
+
+    override fun onStartNestedScroll(child: View, target: View, nestedScrollAxes: Int): Boolean {
+        return onStartNestedScroll(child, target, nestedScrollAxes, TYPE_TOUCH)
+    }
+
+    override fun onNestedPreScroll(target: View, dx: Int, dy: Int, consumed: IntArray) {
+        onNestedPreScroll(target, dx, dy, consumed, TYPE_TOUCH)
+    }
+
+    override fun onNestedScroll(
+        target: View, dxConsumed: Int, dyConsumed: Int,
+        dxUnconsumed: Int, dyUnconsumed: Int
+    ) {
+        onNestedScroll(target, dxConsumed, dyConsumed, dxUnconsumed, dyUnconsumed, TYPE_TOUCH)
+    }
+
+    override fun onStartNestedScroll(child: View, target: View, axes: Int, type: Int): Boolean {
+        val matchHorizontalMode =
+            orientation == HORIZONTAL && axes and ViewCompat.SCROLL_AXIS_HORIZONTAL != 0
+        val matchVerticalMode =
+            orientation == VERTICAL && axes and ViewCompat.SCROLL_AXIS_VERTICAL != 0
+
+        log("onStartNestedScroll target = $target type = $type " +
+            "matchHorizontal = $matchHorizontalMode " +
+            "matchVertical = $matchVerticalMode")
+        if (type == TYPE_TOUCH && (matchHorizontalMode || matchVerticalMode)) {
+            shouldDetermineIfStartNestedScroll = true
+            startNestedScroll(axes)
+            return true
+        }
+        return false
+    }
+
+    override fun onNestedPreScroll(target: View, dx: Int, dy: Int, consumed: IntArray, type: Int) {
+        val topView = mCurrentView
+        val backView = mBackupView
+        if (mState satisfy Mask.SLIDE && topView != null && backView != null) {
+            val dxFromDownX = topView.x - dx
+            val dyFromDownY = topView.y - dy
+            mGesture.scrollChildView(topView, backView,
+                dxFromDownX, dyFromDownY, dx, dy)
+            consumed[0] = dx
+            consumed[1] = dy
+            return
+        }
+        dispatchNestedPreScroll(dx, dy, consumed, null, type)
+    }
+
+    override fun onNestedScroll(
+        target: View, dxConsumed: Int, dyConsumed: Int,
+        dxUnconsumed: Int, dyUnconsumed: Int, type: Int
+    ) {
+
+        fun dispatchToChild() {
+            dispatchNestedScroll(dxConsumed, dyConsumed, dxUnconsumed, dyUnconsumed, null, type)
+        }
+
+        val delegate = mViewHolderDelegate
+        val topView = mCurrentView
+        if (delegate == null || topView == null ||
+            (dxUnconsumed == 0 && dyUnconsumed == 0)) {
+            return dispatchToChild()
+        }
+
+        val adapter = delegate.adapter
+
+        val dxFromDownX = topView.x - dxUnconsumed
+        val dyFromDownY = topView.y - dyUnconsumed
+
+        log("onNestedScroll dx = $dxFromDownX dy = $dyFromDownY")
+
+        if (shouldDetermineIfStartNestedScroll) {
+            shouldDetermineIfStartNestedScroll = false
+            val direction = mGesture.gestureDirection(dxFromDownX, dyFromDownY)
+            val startToMove = mGesture.isStartToMove(dxFromDownX, dyFromDownY)
+            val changeDirection = mGesture.isChangeDirection(dxFromDownX, dyFromDownY)
+
+            if (startToMove || changeDirection) {
+                val directionMask =
+                    if (direction == SlideDirection.Next) Mask.NEXT else Mask.PREV
+                if (!adapter.canSlideTo(direction)) {
+                    mState = State.of(directionMask, Mask.SLIDE, Mask.REJECT)
+                } else {
+                    mState = State.of(directionMask, Mask.SLIDE)
+                    delegate.prepareBackup(direction)
+                }
+            }
+        }
+
+        val backView = mBackupView
+        if (mState satisfy Mask.SLIDE && backView != null) {
+            mGesture.scrollChildView(topView, backView,
+                dxFromDownX, dyFromDownY,
+                dxUnconsumed, dyUnconsumed)
+            return
+        }
+
+        dispatchToChild()
+    }
+
+    override fun onNestedPreFling(target: View, velocityX: Float, velocityY: Float): Boolean {
+        return dispatchNestedPreFling(velocityX, velocityY)
+    }
+
+    override fun onNestedFling(target: View, velocityX: Float, velocityY: Float, consumed: Boolean): Boolean {
+        log("onNestedFling vx = $velocityX vy = $velocityY consumed = $consumed")
+        if (!consumed) {
+            val topView = mCurrentView
+            val backView = mBackupView
+            if (topView != null && backView != null &&
+                mGestureCallback.performFling(topView, backView, velocityX, velocityY)) {
+                return true
+            }
+        }
+        return dispatchNestedFling(velocityX, velocityY, consumed)
+    }
 
     @Suppress("ConstantConditionIf")
     private fun log(str: String) {
@@ -484,20 +637,14 @@ class SlidableLayout : FrameLayout, NestedScrollingChild2 {
         }
     }
 
-    private inner class GestureCallback(
-        val horizontal: OrientationGestureCallback,
-        val vertical: OrientationGestureCallback
-    ) : GestureDetector.SimpleOnGestureListener() {
-
-        private val proxy: OrientationGestureCallback
-            get() = if (orientation == HORIZONTAL) horizontal else vertical
+    private inner class GestureCallback : GestureDetector.SimpleOnGestureListener() {
 
         override fun onScroll(
             e1: MotionEvent?, e2: MotionEvent,
             distanceX: Float, distanceY: Float
         ): Boolean {
             if (mState satisfy Mask.FLING) {
-                proxy.dontConsumeTouchEvent(distanceX, distanceY)
+                mGesture.dontConsumeTouchEvent(distanceX, distanceY)
                 return true
             }
             val topView = mCurrentView ?: return false
@@ -508,11 +655,11 @@ class SlidableLayout : FrameLayout, NestedScrollingChild2 {
             var dyFromDownY = e2.y - downY
             var dxFromDownX = e2.x - downX
 
-            val direction = proxy.gestureDirection(dxFromDownX, dyFromDownY)
+            val direction = mGesture.gestureDirection(dxFromDownX, dyFromDownY)
 
-            val startToMove = proxy.isStartToMove(dxFromDownX, dyFromDownY)
+            val startToMove = mGesture.isStartToMove(dxFromDownX, dyFromDownY)
 
-            val changeDirection = proxy.isChangeDirection(dxFromDownX, dyFromDownY)
+            val changeDirection = mGesture.isChangeDirection(dxFromDownX, dyFromDownY)
 
             var dx = distanceX.toInt()
             var dy = distanceY.toInt()
@@ -540,12 +687,12 @@ class SlidableLayout : FrameLayout, NestedScrollingChild2 {
                 log("onMove state = $mState, start = $startToMove, " +
                     "changeDirection = $changeDirection")
             }
-            if (mState satisfy Mask.REJECT) {
-                return dispatchNestedScroll(0, 0, dx, dy, mScrollOffset)
+            if (mState satisfy Mask.REJECT || mState satisfy Mask.IDLE) {
+                return dispatchNestedScroll(mScrollConsumed[0], mScrollConsumed[1], dx, dy, mScrollOffset)
 
             } else if (mState satisfy Mask.SLIDE) {
                 val backView = mBackupView ?: return false
-                return proxy.scrollChildView(topView, backView, dxFromDownX, dyFromDownY, dx, dy)
+                return mGesture.scrollChildView(topView, backView, dxFromDownX, dyFromDownY, dx, dy)
             }
             return false
         }
@@ -569,25 +716,40 @@ class SlidableLayout : FrameLayout, NestedScrollingChild2 {
             val currentOffsetY = topView.y.toInt()
             val currentOffsetX = topView.x.toInt()
             // if state is reject, don't consume the flingChildView.
-            val consumedFling = proxy.shouldConsumedFling(currentOffsetX, currentOffsetY)
+            val consumedFling = mGesture.shouldConsumedFling(currentOffsetX, currentOffsetY)
             if (!dispatchNestedPreFling(velocityX, velocityY)) {
                 dispatchNestedFling(velocityX, velocityY, consumedFling)
             }
             stopNestedScroll()
 
-            val backView = mBackupView ?: return resetTouch()
+            val backView = mBackupView
+            if (backView != null &&
+                performFling(topView, backView, velocityX, velocityY)) {
+                return true
+            }
+
+            return resetTouch()
+        }
+
+        fun performFling(
+            topView: View, backView: View,
+            velocityX: Float, velocityY: Float
+        ): Boolean {
+            val currentOffsetX = topView.x.toInt()
+            val currentOffsetY = topView.y.toInt()
+
             val delegate = mViewHolderDelegate
-                ?: return resetTouch()
+
             var direction: SlideDirection? = null
             var duration: Int? = null
 
             val widgetHeight = measuredHeight
             val widgetWidth = measuredWidth
-            if (consumedFling) {
+            if (mGesture.shouldConsumedFling(currentOffsetX, currentOffsetY)) {
                 var dy: Int? = null
                 var dx: Int? = null
 
-                if (proxy.isFling(currentOffsetX, currentOffsetY, velocityX, velocityY)) {
+                if (mGesture.isFling(currentOffsetX, currentOffsetY, velocityX, velocityY)) {
                     if (mState == State.SLIDE_NEXT) {
                         direction = SlideDirection.Next
                         dy = -currentOffsetY - widgetHeight
@@ -603,17 +765,18 @@ class SlidableLayout : FrameLayout, NestedScrollingChild2 {
                     dx = -currentOffsetX
                 }
 
-                duration = proxy.startScroll(currentOffsetX, currentOffsetY,
+                duration = mGesture.startScroll(currentOffsetX, currentOffsetY,
                     dx, dy, velocityX, velocityY)
             }
 
-            if (direction != null && duration != null) { //perform flingChildView animation
+            //perform flingChildView animation
+            if (delegate != null && direction != null && duration != null) {
                 mAnimator?.cancel()
                 mAnimator = ValueAnimator.ofFloat(1f).apply {
                     setDuration(duration.toLong())
                     addUpdateListener {
                         if (mScroller.computeScrollOffset()) {
-                            proxy.flingChildView(topView, backView, currentOffsetX, currentOffsetY)
+                            mGesture.flingChildView(topView, backView, currentOffsetX, currentOffsetY)
                         }
                     }
                     addListener(object : AnimatorListenerAdapter() {
@@ -639,9 +802,8 @@ class SlidableLayout : FrameLayout, NestedScrollingChild2 {
                 val directionMask = if (mState satisfy Mask.NEXT) Mask.NEXT else Mask.PREV
                 mState = State.of(directionMask, Mask.FLING)
                 return true
-            } else {
-                return resetTouch()
             }
+            return false
         }
 
         private fun resetTouch(): Boolean {
@@ -653,7 +815,7 @@ class SlidableLayout : FrameLayout, NestedScrollingChild2 {
         override fun onDown(e: MotionEvent): Boolean {
             downY = e.y
             downX = e.x
-            startNestedScroll(ViewCompat.SCROLL_AXIS_VERTICAL)
+            startNestedScroll(mScrollAxis)
             return true
         }
 
@@ -671,12 +833,12 @@ class SlidableLayout : FrameLayout, NestedScrollingChild2 {
                 MotionEvent.ACTION_DOWN -> {
                     downX = event.x
                     downY = event.y
-                    startNestedScroll(ViewCompat.SCROLL_AXIS_VERTICAL)
+                    startNestedScroll(mScrollAxis)
                 }
                 MotionEvent.ACTION_MOVE -> {
                     val dy = abs(event.y - downY)
                     val dx = abs(event.x - downX)
-                    if (proxy.interceptTouchEvent(dx, dy)) {
+                    if (mGesture.interceptTouchEvent(dx, dy)) {
                         log("onInterceptTouchEvent requestDisallow")
                         requestParentDisallowInterceptTouchEvent()
                         intercept = true
@@ -727,7 +889,7 @@ class SlidableLayout : FrameLayout, NestedScrollingChild2 {
     private inner class HorizontalMode : OrientationGestureCallback {
 
         override fun interceptTouchEvent(dxFromDownX: Float, dyFromDownY: Float): Boolean {
-            return dyFromDownY > mTouchSlop && dyFromDownY > 2 * dxFromDownX
+            return dxFromDownX > mTouchSlop && dxFromDownX > 2 * dyFromDownY
         }
 
         override fun gestureDirection(dxFromDownX: Float, dyFromDownY: Float): SlideDirection =
@@ -817,7 +979,7 @@ class SlidableLayout : FrameLayout, NestedScrollingChild2 {
     private inner class VerticalMode : OrientationGestureCallback {
 
         override fun interceptTouchEvent(dxFromDownX: Float, dyFromDownY: Float): Boolean {
-            return dxFromDownX > mTouchSlop && dxFromDownX > 2 * dxFromDownX
+            return dyFromDownY > mTouchSlop && dyFromDownY > 2 * dxFromDownX
         }
 
         override fun gestureDirection(dxFromDownX: Float, dyFromDownY: Float): SlideDirection =

@@ -35,4 +35,12 @@ class MainActivity : FragmentActivity() {
     fun toDemoForDataSetChanged(v: View) {
         startActivity(Intent(this, DemoForDataSetChanged::class.java))
     }
+
+    fun toDemoForNestedScroll(v: View) {
+        startActivity(Intent(this, DemoForNestedScroll::class.java))
+    }
+
+    fun toDemoForCrossScroll(v: View) {
+        startActivity(Intent(this, DemoForCrossScroll::class.java))
+    }
 }

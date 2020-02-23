@@ -76,4 +76,28 @@
         android:text="Example: NotifyDataSetChanged"
         android:textColor="#ffffff"
         android:textStyle="bold" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="10dp"
+        android:background="@color/colorAccent"
+        android:gravity="center"
+        android:onClick="toDemoForNestedScroll"
+        android:padding="10dp"
+        android:text="Example: Nested Scrolling"
+        android:textColor="#ffffff"
+        android:textStyle="bold" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="10dp"
+        android:background="@color/colorAccent"
+        android:gravity="center"
+        android:onClick="toDemoForCrossScroll"
+        android:padding="10dp"
+        android:text="Example: Cross Scrolling"
+        android:textColor="#ffffff"
+        android:textStyle="bold" />
 </LinearLayout>
