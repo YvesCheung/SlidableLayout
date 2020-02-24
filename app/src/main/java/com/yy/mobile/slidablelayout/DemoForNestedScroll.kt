@@ -5,7 +5,6 @@ import android.graphics.Color
 import android.os.Bundle
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
-import android.support.v7.widget.RecyclerView.HORIZONTAL
 import android.support.v7.widget.RecyclerView.VERTICAL
 import android.view.LayoutInflater
 import android.view.View
@@ -24,7 +23,7 @@ import java.util.*
  */
 class DemoForNestedScroll : BaseDemoActivity() {
 
-    private val orientation = HORIZONTAL //VERTICAL also ok
+    private val orientation = VERTICAL //HORIZONTAL also ok
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -43,13 +42,15 @@ class DemoForNestedScroll : BaseDemoActivity() {
             inflater: LayoutInflater
         ): View {
             val backgroundColor = Random().nextInt() or 0xFF000000.toInt()
-            return RecyclerView(context).apply { setBackgroundColor(backgroundColor) }
+            return RecyclerView(context).apply {
+                layoutManager = LinearLayoutManager(context, orientation, false)
+                adapter = RecyclerViewAdapter()
+                setBackgroundColor(backgroundColor)
+            }
         }
 
         override fun onBindView(view: View, direction: SlideDirection) {
-            view as RecyclerView
-            view.layoutManager = LinearLayoutManager(view.context, orientation, false)
-            view.adapter = RecyclerViewAdapter()
+            //Do Nothing.
         }
 
         override fun canSlideTo(direction: SlideDirection): Boolean = true
