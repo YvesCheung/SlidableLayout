@@ -8,10 +8,11 @@
 
 Preview
 ========
-
-![SlidableLayout][1]
-
-![SlidableLayoutHorizontal][2]
+|  **Vertical**   |  **Horizontal**  |
+| :----:  | :----: |
+| ![SlidableLayout][1]  | ![SlidableLayoutHorizontal][2] |
+|  **Nested scroll**  |  **Opposite nested scroll**  |
+| ![NestedScroll][3]  | ![OppositeNestedScroll][4] |
 
 Features
 ========
@@ -20,7 +21,7 @@ Features
 - Switch the position of two reusable `View` in turn when sliding
 - Abundant callback to cover lifecycle
 - Support infinite sliding
-- Support `NestedScrolling` and can be used with layouts that implement the `NestedScrollingParent` interface, such as [SwipeRefreshLayout][3].
+- Support `NestedScrolling` and can be used with layouts that implement the `NestedScrollingParent` interface, such as [SwipeRefreshLayout][5].
 
 Usage
 ========
@@ -39,7 +40,7 @@ Usage
     android:orientation="horizontal" />
 ```
 
-Implements the [NestedScrollingChild][5] interface, `SlidableLayout` can nest into other refresh layouts, so you can customize your pull-down-refresh and pull-up-load-more behavior.
+Implements the [NestedScrollingChild][6] interface, `SlidableLayout` can nest into other refresh layouts, so you can customize your pull-down-refresh and pull-up-load-more behavior.
 
 ### finish adapter code
 
@@ -108,7 +109,7 @@ Call `setAdapter` to add `Fragment` into `SlideableLayout` ：
 slidable_layout.setAdapter(MyAdapter(supportFragmentManager))
 ```
 
-The [demo][6] provides more detail.
+The [demo][7] provides more detail.
 
 ### Callback
 
@@ -161,12 +162,12 @@ Install
     ```groovy
     dependencies {
         // Support library
-        implementation 'com.github.YvesCheung:SlidableLayout:1.0.6'
+        implementation 'com.github.YvesCheung:SlidableLayout:1.1.0'
         //implementation "com.android.support:support-fragment:$support_version"
         
         // AndroidX
-        implementation 'com.github.YvesCheung:SlidableLayout:1.0.6.x'
-        //implementation "androidx.fragment:fragment:1.0.0"
+        implementation 'com.github.YvesCheung:SlidableLayout:1.1.0.x'
+        //implementation "androidx.fragment:fragment:$androidx_version"
     }
     ```
 
@@ -191,6 +192,8 @@ License
 
   [1]: https://raw.githubusercontent.com/YvesCheung/SlidableLayout/master/material/slidableLayout.gif
   [2]: https://github.com/YvesCheung/SlidableLayout/raw/master/material/SlidableLayoutHorizontal.gif
-  [3]: https://developer.android.com/reference/android/support/v4/widget/SwipeRefreshLayout
-  [5]: https://developer.android.com/reference/android/support/v4/view/NestedScrollingChild
-  [6]: https://github.com/YvesCheung/SlidableLayout/tree/master/app/src/main/java/com/yy/mobile/slidablelayout
+  [3]: https://raw.githubusercontent.com/YvesCheung/SlidableLayout/master/material/NestedScroll.gif
+  [4]: https://raw.githubusercontent.com/YvesCheung/SlidableLayout/master/material/OppositeNestedScroll.gif
+  [5]: https://developer.android.com/reference/android/support/v4/widget/SwipeRefreshLayout
+  [6]: https://developer.android.com/reference/android/support/v4/view/NestedScrollingChild
+  [7]: https://github.com/YvesCheung/SlidableLayout/tree/master/app/src/main/java/com/yy/mobile/slidablelayout
