@@ -25,6 +25,8 @@
         <activity android:name=".DemoForLoopHorizontally" />
         <activity android:name=".DemoForAutoSlide" />
         <activity android:name=".DemoForDataSetChanged" />
+        <activity android:name=".DemoForNestedScroll" />
+        <activity android:name=".DemoForCrossScroll" />
     </application>
 
 </manifest>

@@ -21,7 +21,7 @@ open class DemoForLoop : BaseDemoActivity() {
     override fun createAdapter(data: SimpleQueue<PageInfo>): SlideAdapter<out SlideViewHolder> =
         LoopAdapter(data)
 
-    private class LoopAdapter(val data: SimpleQueue<PageInfo>) : SlideViewAdapter() {
+    open class LoopAdapter(val data: SimpleQueue<PageInfo>) : SlideViewAdapter() {
 
         private var curIdx = 0
 
