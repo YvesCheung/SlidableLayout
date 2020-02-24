@@ -21,10 +21,6 @@
 - 支持无限滑动
 - 支持嵌套滑动，可与其他实现 `NestedScrolling` 机制的布局配合使用，比如 [SwipeRefreshLayout][5] 等刷新加载布局
 
-## 与其他方案的对比
-目前网络上大部分上下滑方案都是围绕 `ViewPager` 或者 `RecyclerView` + `SnapHelper` 。
-这是我的个人见解：[为什么我不用ViewPager或RecyclerView来做上下滑布局][6]。
-
 ## 使用
 
 ### 在XML或者代码中添加SlidableLayout
