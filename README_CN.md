@@ -6,9 +6,12 @@
 
 ## 效果预览
 
-![SlidableLayout][1]
+|  **垂直方向**   |  **水平方向**  |
+| :----:  | :----: |
+| ![SlidableLayout][1]  | ![SlidableLayoutHorizontal][2] |
+|  **同向嵌套滑动**  |  **异向嵌套滑动**  |
+|![NestedScroll][3]  | ![OppositeNestedScoll][4]|
 
-![SlidableLayoutHorizontal][2]
 
 ## 特性
 - 通用的基本场景，可以滑动切换 `View` 或者 `Fragment` 
@@ -16,11 +19,11 @@
 - 只复用两个 `View` ( `Fragment` )， 滑动只是轮流切换两个 `View` 的位置，没有多余的性能消耗
 - 充足的时序回调，可以在滑动过程中掌握 *开始可见* ，*完全可见*，*完全不可见* 的时机
 - 支持无限滑动
-- 支持嵌套滑动，可与其他实现 `NestedScrolling` 机制的布局配合使用，比如 [SwipeRefreshLayout][3] 等刷新加载布局
+- 支持嵌套滑动，可与其他实现 `NestedScrolling` 机制的布局配合使用，比如 [SwipeRefreshLayout][5] 等刷新加载布局
 
 ## 与其他方案的对比
 目前网络上大部分上下滑方案都是围绕 `ViewPager` 或者 `RecyclerView` + `SnapHelper` 。
-这是我的个人见解：[为什么我不用ViewPager或RecyclerView来做上下滑布局][4]。
+这是我的个人见解：[为什么我不用ViewPager或RecyclerView来做上下滑布局][6]。
 
 ## 使用
 
@@ -38,7 +41,7 @@
     android:orientation="horizontal" />
 ```
 
-`SlidableLayout` 本身实现了 [NestedScrollingChild][5] 接口，因此可以在外层嵌套其他滑动布局，比如自定义你的下拉刷新与上拉加载。
+`SlidableLayout` 本身实现了 [NestedScrollingChild][7] 接口，因此可以在外层嵌套其他滑动布局，比如自定义你的下拉刷新与上拉加载。
 
 ### 适配器业务逻辑
 
@@ -112,7 +115,7 @@ class MyAdapter(fm: FragmentManager) : SlideFragmentAdapter(fm) {
 slidable_layout.setAdapter(MyAdapter(supportFragmentManager))
 ```
 
-更详细的适配器使用可以参照 [demo][6] 。
+更详细的适配器使用可以参照 [demo][8] 。
 
 ### 滑动时机回调
 
@@ -159,13 +162,13 @@ class DemoFragment : Fragment(), SlidableUI {
     dependencies {
         // Support library
         // 如果使用的是Support包，添加以下依赖
-        implementation 'com.github.YvesCheung:SlidableLayout:1.0.6'
+        implementation 'com.github.YvesCheung:SlidableLayout:1.1.0'
         //implementation "com.android.support:support-fragment:$support_version"
         
         // AndroidX
         // 如果使用的是AndroidX，添加以下依赖
-        implementation 'com.github.YvesCheung:SlidableLayout:1.0.6.x'
-        //implementation "androidx.fragment:fragment:1.0.0"
+        implementation 'com.github.YvesCheung:SlidableLayout:1.1.0.x'
+        //implementation "androidx.fragment:fragment:$androidx_version"
     }
     ```
 
@@ -189,7 +192,9 @@ class DemoFragment : Fragment(), SlidableUI {
 
   [1]: https://raw.githubusercontent.com/YvesCheung/SlidableLayout/master/material/slidableLayout.gif
   [2]: https://github.com/YvesCheung/SlidableLayout/raw/master/material/SlidableLayoutHorizontal.gif
-  [3]: https://developer.android.com/reference/android/support/v4/widget/SwipeRefreshLayout
-  [4]: https://github.com/YvesCheung/SlidableLayout/blob/master/WhyDontIUseOtherSolution.md
-  [5]: https://developer.android.com/reference/android/support/v4/view/NestedScrollingChild
-  [6]: https://github.com/YvesCheung/SlidableLayout/tree/master/app/src/main/java/com/yy/mobile/slidablelayout
+  [3]: https://raw.githubusercontent.com/YvesCheung/SlidableLayout/master/material/NestedScroll.gif
+  [4]: https://raw.githubusercontent.com/YvesCheung/SlidableLayout/master/material/OppositeNestedScroll.gif
+  [5]: https://developer.android.com/reference/android/support/v4/widget/SwipeRefreshLayout
+  [6]: https://github.com/YvesCheung/SlidableLayout/blob/master/WhyDontIUseOtherSolution.md
+  [7]: https://developer.android.com/reference/android/support/v4/view/NestedScrollingChild
+  [8]: https://github.com/YvesCheung/SlidableLayout/tree/master/app/src/main/java/com/yy/mobile/slidablelayout
