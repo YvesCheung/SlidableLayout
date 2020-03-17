@@ -380,7 +380,7 @@ class SlidableLayout : FrameLayout, NestedScrollingChild2, NestedScrollingParent
     override fun onNestedPreScroll(target: View, dx: Int, dy: Int, consumed: IntArray, type: Int) {
         val topView = mCurrentView
         val backView = mBackupView
-        if (mState satisfy Mask.SLIDE && topView != null && backView != null) {
+        if (!(mState satisfy Mask.REJECT) && mState satisfy Mask.SLIDE && topView != null && backView != null) {
             val dxFromDownX = topView.x - dx
             val dyFromDownY = topView.y - dy
             mGesture.scrollChildView(topView, backView,
@@ -430,14 +430,13 @@ class SlidableLayout : FrameLayout, NestedScrollingChild2, NestedScrollingParent
                 }
             }
             log("onNestedScroll dx = $dxFromDownX dy = $dyFromDownY type = $type " +
-                "startToMove = $startToMove changeDirection = $changeDirection")
+                "startToMove = $startToMove changeDirection = $changeDirection state = $mState")
         } else {
-            log("onNestedScroll dx = $dxFromDownX dy = $dyFromDownY type = $type")
+            log("onNestedScroll dx = $dxFromDownX dy = $dyFromDownY type = $type state = $mState")
         }
 
-
         val backView = mBackupView
-        if (mState satisfy Mask.SLIDE && backView != null) {
+        if (!(mState satisfy Mask.REJECT) && mState satisfy Mask.SLIDE && backView != null) {
             mGesture.scrollChildView(topView, backView,
                 dxFromDownX, dyFromDownY,
                 dxUnconsumed, dyUnconsumed)
