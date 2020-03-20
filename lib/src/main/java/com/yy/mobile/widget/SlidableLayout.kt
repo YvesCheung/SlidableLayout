@@ -53,7 +53,7 @@ import kotlin.math.sin
  * 2019/4/11
  */
 @Suppress("MemberVisibilityCanBePrivate")
-class SlidableLayout : FrameLayout, NestedScrollingChild2, NestedScrollingParent2 {
+open class SlidableLayout : FrameLayout, NestedScrollingChild2, NestedScrollingParent2 {
 
     constructor(context: Context) : this(context, null)
 
