@@ -69,9 +69,9 @@ open class SlidableLayout : FrameLayout, NestedScrollingChild2, NestedScrollingP
         const val HORIZONTAL = 0
         const val VERTICAL = 1
 
-        private const val DEBUG = false
+        protected const val DEBUG = false
 
-        private const val MIN_FLING_VELOCITY = 400 // dips
+        const val MIN_FLING_VELOCITY = 400 // dips
 
         const val MAX_DURATION = 600 //最大滑行时间ms
 
@@ -98,12 +98,12 @@ open class SlidableLayout : FrameLayout, NestedScrollingChild2, NestedScrollingP
             field = value
         }
 
-    private val mMinFlingSpeed: Float //定义滑动速度足够快的标准
+    protected val mMinFlingSpeed: Float //定义滑动速度足够快的标准
 
-    private val childHelper = NestedScrollingChildHelper(this)
-    private val parentHelper = NestedScrollingParentHelper(this)
+    protected val childHelper = NestedScrollingChildHelper(this)
+    protected val parentHelper = NestedScrollingParentHelper(this)
 
-    private val mTouchSlop: Int
+    protected val mTouchSlop: Int
 
     private val mDataObservable = SlidableDataObservable()
     private val mDataObserver = Observer()
@@ -118,7 +118,7 @@ open class SlidableLayout : FrameLayout, NestedScrollingChild2, NestedScrollingP
         isNestedScrollingEnabled = true
     }
 
-    private fun initAttr(context: Context, attrs: AttributeSet?, defStyleAttr: Int) {
+    protected open fun initAttr(context: Context, attrs: AttributeSet?, defStyleAttr: Int) {
         val a = context.obtainStyledAttributes(
             attrs, R.styleable.SlidableLayout, defStyleAttr, 0)
         orientation = a.getInt(R.styleable.SlidableLayout_android_orientation, VERTICAL)
@@ -126,7 +126,7 @@ open class SlidableLayout : FrameLayout, NestedScrollingChild2, NestedScrollingP
     }
 
     @Suppress("unused")
-    private enum class State(val flag: Int) {
+    protected enum class State(val flag: Int) {
         /**
          * IDLE
          * 静止状态
@@ -175,7 +175,7 @@ open class SlidableLayout : FrameLayout, NestedScrollingChild2, NestedScrollingP
         }
     }
 
-    private object Mask {
+    protected object Mask {
         const val IDLE = 0b000001
         const val NEXT = 0b000010
         const val PREV = 0b000100
@@ -184,40 +184,40 @@ open class SlidableLayout : FrameLayout, NestedScrollingChild2, NestedScrollingP
         const val REJECT = 0b100000
     }
 
-    private var mState = State.of(Mask.IDLE)
+    protected var mState = State.of(Mask.IDLE)
 
     private val mInflater by lazy(NONE) { LayoutInflater.from(context) }
 
-    private val mScroller = Scroller(context, sInterpolator)
-    private var mAnimator: ValueAnimator? = null
+    protected val mScroller = Scroller(context, sInterpolator)
+    protected var mAnimator: ValueAnimator? = null
 
-    private var mViewHolderDelegate: ViewHolderDelegate<out SlideViewHolder>? = null
+    protected var mViewHolderDelegate: ViewHolderDelegate<out SlideViewHolder>? = null
 
-    private inline val mCurrentView: View?
+    protected inline val mCurrentView: View?
         get() = mViewHolderDelegate?.currentViewHolder?.view
 
-    private inline val mBackupView: View?
+    protected inline val mBackupView: View?
         get() = mViewHolderDelegate?.backupViewHolder?.view
 
-    private var downY = 0f
-    private var downX = 0f
+    protected var downY = 0f
+    protected var downX = 0f
 
-    private var mScrollConsumed: IntArray = IntArray(2)
-    private var mScrollOffset: IntArray = IntArray(2)
+    protected var mScrollConsumed: IntArray = IntArray(2)
+    protected var mScrollOffset: IntArray = IntArray(2)
 
-    private val mGestureCallback = GestureCallback()
-    private val mHorizontalGesture = HorizontalMode()
-    private val mVerticalGesture = VerticalMode()
-    private inline val mGesture
+    protected val mGestureCallback = GestureCallback()
+    protected val mHorizontalGesture = HorizontalMode()
+    protected val mVerticalGesture = VerticalMode()
+    protected inline val mGesture
         get() = if (orientation == HORIZONTAL) mHorizontalGesture else mVerticalGesture
 
-    private inline val mScrollAxis
+    protected inline val mScrollAxis
         get() = if (orientation == HORIZONTAL) ViewCompat.SCROLL_AXIS_HORIZONTAL else ViewCompat.SCROLL_AXIS_VERTICAL
 
-    private val gestureDetector = GestureDetector(context, mGestureCallback)
+    protected val gestureDetector = GestureDetector(context, mGestureCallback)
 
-    private var shouldDetermineIfStartNestedScroll = false
-    private var nestedScrolling = false
+    protected var shouldDetermineIfStartNestedScroll = false
+    protected var nestedScrolling = false
 
     @SuppressLint("ClickableViewAccessibility")
     override fun onTouchEvent(event: MotionEvent): Boolean {
@@ -239,7 +239,11 @@ open class SlidableLayout : FrameLayout, NestedScrollingChild2, NestedScrollingP
     }
 
     // just like ViewPager
-    private fun calculateDuration(velocity: Float, maxDistance: Int, currentDistance: Int): Int {
+    protected open fun calculateDuration(
+        velocity: Float,
+        maxDistance: Int,
+        currentDistance: Int
+    ): Int {
 
         // We want the duration of the page snap animation to be influenced by the distance that
         // the screen has to travel, however, we don't want this duration to be effected in a
@@ -464,7 +468,7 @@ open class SlidableLayout : FrameLayout, NestedScrollingChild2, NestedScrollingP
     }
 
     @Suppress("ConstantConditionIf")
-    private fun log(str: String) {
+    protected fun log(str: String) {
         if (DEBUG) Log.i("SlidableLayout", str)
     }
 
@@ -474,7 +478,7 @@ open class SlidableLayout : FrameLayout, NestedScrollingChild2, NestedScrollingP
      * @see SlideViewAdapter
      * @see SlideFragmentAdapter
      */
-    fun setAdapter(adapter: SlideAdapter<out SlideViewHolder>?) {
+    open fun setAdapter(adapter: SlideAdapter<out SlideViewHolder>?) {
         if (mViewHolderDelegate != null) {
             removeAllViews()
             unregisterDataSetObserver(mDataObserver)
@@ -501,7 +505,7 @@ open class SlidableLayout : FrameLayout, NestedScrollingChild2, NestedScrollingP
      *
      * @return true if successfully sliding.
      */
-    fun slideTo(direction: SlideDirection): Boolean {
+    open fun slideTo(direction: SlideDirection): Boolean {
         if (direction != SlideDirection.Origin &&
             mState satisfy Mask.IDLE) {
 
@@ -569,7 +573,7 @@ open class SlidableLayout : FrameLayout, NestedScrollingChild2, NestedScrollingP
         mDataObservable.notifyDataSetChanged()
     }
 
-    private inner class ViewHolderDelegate<ViewHolder : SlideViewHolder>(
+    protected inner class ViewHolderDelegate<ViewHolder : SlideViewHolder>(
         val adapter: SlideAdapter<ViewHolder>
     ) {
 
@@ -642,7 +646,7 @@ open class SlidableLayout : FrameLayout, NestedScrollingChild2, NestedScrollingP
         }
     }
 
-    private inner class GestureCallback : GestureDetector.SimpleOnGestureListener() {
+    protected inner class GestureCallback : GestureDetector.SimpleOnGestureListener() {
 
         override fun onScroll(
             e1: MotionEvent?, e2: MotionEvent,
@@ -855,7 +859,7 @@ open class SlidableLayout : FrameLayout, NestedScrollingChild2, NestedScrollingP
         }
     }
 
-    private interface OrientationGestureCallback {
+    protected interface OrientationGestureCallback {
 
         fun interceptTouchEvent(dxFromDownX: Float, dyFromDownY: Float): Boolean
 
@@ -892,7 +896,7 @@ open class SlidableLayout : FrameLayout, NestedScrollingChild2, NestedScrollingP
         fun dontConsumeTouchEvent(dx: Float, dy: Float)
     }
 
-    private inner class HorizontalMode : OrientationGestureCallback {
+    protected open inner class HorizontalMode : OrientationGestureCallback {
 
         override fun interceptTouchEvent(dxFromDownX: Float, dyFromDownY: Float): Boolean {
             return dxFromDownX > mTouchSlop && dxFromDownX > 2 * dyFromDownY
@@ -982,7 +986,7 @@ open class SlidableLayout : FrameLayout, NestedScrollingChild2, NestedScrollingP
         }
     }
 
-    private inner class VerticalMode : OrientationGestureCallback {
+    protected open inner class VerticalMode : OrientationGestureCallback {
 
         override fun interceptTouchEvent(dxFromDownX: Float, dyFromDownY: Float): Boolean {
             return dyFromDownY > mTouchSlop && dyFromDownY > 2 * dxFromDownX
