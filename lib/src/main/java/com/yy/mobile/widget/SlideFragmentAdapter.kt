@@ -8,7 +8,8 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import android.widget.FrameLayout
 
-abstract class SlideFragmentAdapter(private val fm: FragmentManager) : SlideAdapter<FragmentViewHolder> {
+abstract class SlideFragmentAdapter(private val fm: FragmentManager) :
+    SlideAdapter<FragmentViewHolder> {
 
     private val viewHolderList = mutableListOf<FragmentViewHolder>()
 
@@ -29,17 +30,19 @@ abstract class SlideFragmentAdapter(private val fm: FragmentManager) : SlideAdap
     final override fun onCreateViewHolder(context: Context, parent: ViewGroup, inflater: LayoutInflater): FragmentViewHolder {
         val viewGroup = FrameLayout(context)
         viewGroup.id = ViewCompat.generateViewId()
-        val fragment = onCreateFragment(context)
-        fm.beginTransaction().add(viewGroup.id, fragment).commitAllowingStateLoss()
-        val viewHolder = FragmentViewHolder(viewGroup, fragment)
+        val viewHolder = FragmentViewHolder(viewGroup, onCreateFragment(context))
         viewHolderList.add(viewHolder)
         return viewHolder
     }
 
     final override fun onBindView(viewHolder: FragmentViewHolder, direction: SlideDirection) {
         val fragment = viewHolder.f
-        fm.beginTransaction().show(fragment).commitAllowingStateLoss()
-        viewHolder.view.post {
+        if (fragment.isAdded) {
+            fm.beginTransaction().show(fragment).commitNowAllowingStateLoss()
+        } else {
+            fm.beginTransaction().add(viewHolder.container.id, viewHolder.f).commitNowAllowingStateLoss()
+        }
+        viewHolder.container.post {
             onBindFragment(fragment, direction)
             if (fragment is SlidableUI) {
                 fragment.startVisible(direction)
@@ -64,7 +67,7 @@ abstract class SlideFragmentAdapter(private val fm: FragmentManager) : SlideAdap
 
     final override fun onViewDismiss(viewHolder: FragmentViewHolder, parent: ViewGroup, direction: SlideDirection) {
         val fragment = viewHolder.f
-        fm.beginTransaction().hide(fragment).commitAllowingStateLoss()
+        fm.beginTransaction().hide(fragment).commitNowAllowingStateLoss()
         if (fragment is SlidableUI) {
             fragment.invisible(direction)
         }
