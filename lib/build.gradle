@@ -29,6 +29,10 @@ android {
             }
         }
     }
+
+    compileOptions {
+        kotlinOptions.freeCompilerArgs += ['-module-name', "${group}.SlidableLayout"]
+    }
 }
 
 dependencies {
