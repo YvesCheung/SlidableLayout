@@ -161,13 +161,7 @@ Install
 2. Add the dependency
     ```groovy
     dependencies {
-        // Support library
-        implementation 'com.github.YvesCheung:SlidableLayout:1.1.0'
-        //implementation "com.android.support:support-fragment:$support_version"
-        
-        // AndroidX
-        implementation 'com.github.YvesCheung:SlidableLayout:1.1.0.x'
-        //implementation "androidx.fragment:fragment:$androidx_version"
+        implementation 'com.github.YvesCheung:SlidableLayout:1.2.0'
     }
     ```
 
