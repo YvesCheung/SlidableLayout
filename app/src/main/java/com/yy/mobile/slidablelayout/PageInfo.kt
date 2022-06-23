@@ -1,6 +1,6 @@
 package com.yy.mobile.slidablelayout
 
-import android.support.annotation.DrawableRes
+import androidx.annotation.DrawableRes
 
 data class PageInfo(
     @DrawableRes

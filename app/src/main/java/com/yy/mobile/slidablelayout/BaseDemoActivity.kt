@@ -2,12 +2,12 @@ package com.yy.mobile.slidablelayout
 
 import android.os.Build
 import android.os.Bundle
-import android.support.v4.app.FragmentActivity
 import android.view.View
 import android.view.Window
 import android.view.WindowManager
-import com.scwang.smartrefresh.layout.footer.ClassicsFooter
-import com.scwang.smartrefresh.layout.header.ClassicsHeader
+import androidx.fragment.app.FragmentActivity
+import com.scwang.smart.refresh.footer.ClassicsFooter
+import com.scwang.smart.refresh.header.ClassicsHeader
 import com.yy.mobile.widget.SlideAdapter
 import com.yy.mobile.widget.SlideViewHolder
 import kotlinx.android.synthetic.main.activity_demo.*

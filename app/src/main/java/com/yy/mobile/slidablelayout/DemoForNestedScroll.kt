@@ -3,9 +3,9 @@ package com.yy.mobile.slidablelayout
 import android.content.Context
 import android.graphics.Color
 import android.os.Bundle
-import android.support.v7.widget.LinearLayoutManager
-import android.support.v7.widget.RecyclerView
-import android.support.v7.widget.RecyclerView.VERTICAL
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import androidx.recyclerview.widget.RecyclerView.VERTICAL
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -43,7 +43,11 @@ class DemoForNestedScroll : BaseDemoActivity() {
         ): View {
             val backgroundColor = Random().nextInt() or 0xFF000000.toInt()
             return RecyclerView(context).apply {
-                layoutManager = LinearLayoutManager(context, orientation, false)
+                layoutManager = LinearLayoutManager(
+                    context,
+                    orientation,
+                    false
+                )
                 adapter = RecyclerViewAdapter()
                 setBackgroundColor(backgroundColor)
             }

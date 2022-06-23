@@ -4,7 +4,7 @@ import android.app.Activity
 import android.graphics.drawable.Animatable
 import android.graphics.drawable.Drawable
 import android.os.Build
-import android.support.annotation.DrawableRes
+import androidx.annotation.DrawableRes
 import android.widget.ImageView
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.target.SimpleTarget
