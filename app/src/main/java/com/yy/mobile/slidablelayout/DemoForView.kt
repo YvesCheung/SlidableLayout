@@ -21,23 +21,25 @@ open class DemoForView : BaseDemoActivity() {
     override fun createAdapter(data: SimpleQueue<PageInfo>): SlideAdapter<out SlideViewHolder> =
         DemoViewAdapter(data)
 
-    open class DemoViewAdapter(protected val data: SimpleQueue<PageInfo>) : SlideViewAdapter() {
+    open class DemoViewAdapter(private val data: SimpleQueue<PageInfo>) : SlideViewAdapter() {
 
         @Suppress("CascadeIf")
         override fun canSlideTo(direction: SlideDirection): Boolean {
             val info =
-                if (direction == SlideDirection.Next) {
-                    data.next()
-                } else if (direction == SlideDirection.Prev) {
-                    data.prev()
-                } else {
-                    data.current()
+                when (direction) {
+                    SlideDirection.Next -> data.next()
+                    SlideDirection.Prev -> data.prev()
+                    else -> data.current()
                 }
             return info != null
         }
 
         @SuppressLint("InflateParams")
-        override fun onCreateView(context: Context, parent: ViewGroup, inflater: LayoutInflater): View {
+        override fun onCreateView(
+            context: Context,
+            parent: ViewGroup,
+            inflater: LayoutInflater
+        ): View {
             return inflater.inflate(R.layout.page_main_content, null, false)
         }
 

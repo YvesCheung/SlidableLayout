@@ -21,15 +21,16 @@ class DemoForCrossScroll : BaseDemoActivity() {
         return OuterScrollAdapter(data)
     }
 
-    private class OuterScrollAdapter(
-        val data: SimpleQueue<PageInfo>
-    ) : SlideViewAdapter() {
+    private class OuterScrollAdapter(val data: SimpleQueue<PageInfo>) : SlideViewAdapter() {
 
-        override fun onCreateView(context: Context, parent: ViewGroup, inflater: LayoutInflater): View =
-            SlidableLayout(context).apply {
-                orientation = HORIZONTAL
-                setAdapter(InnerScrollAdapter(data))
-            }
+        override fun onCreateView(
+            context: Context,
+            parent: ViewGroup,
+            inflater: LayoutInflater
+        ): View = SlidableLayout(context).apply {
+            orientation = HORIZONTAL
+            setAdapter(InnerScrollAdapter(data))
+        }
 
         override fun onBindView(view: View, direction: SlideDirection) {}
 

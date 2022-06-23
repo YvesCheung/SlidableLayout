@@ -50,12 +50,10 @@ open class DemoForFragment : BaseDemoActivity() {
         }
 
         fun getData(direction: SlideDirection): PageInfo? {
-            return if (direction == SlideDirection.Next) {
-                data.next()
-            } else if (direction == SlideDirection.Prev) {
-                data.prev()
-            } else {
-                data.current()
+            return when (direction) {
+                SlideDirection.Next -> data.next()
+                SlideDirection.Prev -> data.prev()
+                else -> data.current()
             }
         }
     }
@@ -65,7 +63,11 @@ open class DemoForFragment : BaseDemoActivity() {
         private var currentInfo: PageInfo? = null
 
         @SuppressLint("InflateParams")
-        override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+        override fun onCreateView(
+            inflater: LayoutInflater,
+            container: ViewGroup?,
+            savedInstanceState: Bundle?
+        ): View? {
             return inflater.inflate(R.layout.page_main_content, null, false)
         }
 
@@ -99,9 +101,11 @@ open class DemoForFragment : BaseDemoActivity() {
 
         override fun onHiddenChanged(hidden: Boolean) {
             super.onHiddenChanged(hidden)
-            Log.i("SlidableLayout", "onHiddenChanged " +
-                "${if (hidden) "->hidden" else "->show"} " +
-                "$currentInfo")
+            Log.i(
+                "SlidableLayout", "onHiddenChanged " +
+                        "${if (hidden) "->hidden" else "->show"} " +
+                        "$currentInfo"
+            )
         }
 
         override fun onResume() {

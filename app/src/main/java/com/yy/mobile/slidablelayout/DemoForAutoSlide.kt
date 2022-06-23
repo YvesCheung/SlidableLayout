@@ -27,7 +27,8 @@ class DemoForAutoSlide : BaseDemoActivity() {
     /**
      * 视图出现的两秒后，自动滑到下一个视图
      */
-    private inner class AutoSlideAdapter(data: SimpleQueue<PageInfo>) : DemoForView.DemoViewAdapter(data) {
+    private inner class AutoSlideAdapter(data: SimpleQueue<PageInfo>) :
+        DemoForView.DemoViewAdapter(data) {
 
         override fun onViewComplete(view: View, direction: SlideDirection) {
             super.onViewComplete(view, direction)

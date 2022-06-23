@@ -28,7 +28,11 @@ open class DemoForLoop : BaseDemoActivity() {
         override fun canSlideTo(direction: SlideDirection): Boolean = true
 
         @SuppressLint("InflateParams")
-        override fun onCreateView(context: Context, parent: ViewGroup, inflater: LayoutInflater): View {
+        override fun onCreateView(
+            context: Context,
+            parent: ViewGroup,
+            inflater: LayoutInflater
+        ): View {
             return inflater.inflate(R.layout.page_main_content, null, false)
         }
 

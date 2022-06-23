@@ -4,8 +4,8 @@ import android.app.Activity
 import android.graphics.drawable.Animatable
 import android.graphics.drawable.Drawable
 import android.os.Build
-import androidx.annotation.DrawableRes
 import android.widget.ImageView
+import androidx.annotation.DrawableRes
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.target.SimpleTarget
 import com.bumptech.glide.request.transition.Transition
@@ -19,7 +19,8 @@ fun ImageView.setGifResource(@DrawableRes resId: Int) {
     val view = this
     val ctx = view.context as? Activity
     if (ctx == null ||
-        (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1 && ctx.isDestroyed)) {
+        (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1 && ctx.isDestroyed)
+    ) {
         return
     }
     Glide.with(view).load(resId).into(object : SimpleTarget<Drawable>() {
