@@ -504,7 +504,10 @@ class SlidableLayout @JvmOverloads constructor(
                 ?: return false
             val adapter = delegate.adapter
 
-            startNestedScroll(ViewCompat.SCROLL_AXIS_VERTICAL, TYPE_NON_TOUCH)
+            startNestedScroll(
+                if (orientation == VERTICAL) ViewCompat.SCROLL_AXIS_VERTICAL
+                else ViewCompat.SCROLL_AXIS_HORIZONTAL
+            )
             requestParentDisallowInterceptTouchEvent()
 
             //Simulate sliding at a [mockSpeed] in this direction
@@ -664,15 +667,6 @@ class SlidableLayout @JvmOverloads constructor(
 
             val changeDirection = mGesture.isChangeDirection(dxFromDownX, dyFromDownY)
 
-            var dx = distanceX.toInt()
-            var dy = distanceY.toInt()
-            if (dispatchNestedPreScroll(dx, dy, mScrollConsumed, mScrollOffset)) {
-                dx -= mScrollConsumed[0]
-                dy -= mScrollConsumed[1]
-                dxFromDownX -= mScrollConsumed[0]
-                dyFromDownY -= mScrollConsumed[1]
-            }
-
             if (startToMove) {
                 requestParentDisallowInterceptTouchEvent()
             }
@@ -692,18 +686,28 @@ class SlidableLayout @JvmOverloads constructor(
                             "changeDirection = $changeDirection"
                 )
             }
-            if (mState satisfy Mask.REJECT || mState satisfy Mask.IDLE) {
-                return dispatchNestedScroll(
-                    mScrollConsumed[0],
-                    mScrollConsumed[1],
-                    dx,
-                    dy,
-                    mScrollOffset
-                )
 
-            } else if (mState satisfy Mask.SLIDE) {
-                val backView = mBackupView ?: return false
-                return mGesture.scrollChildView(topView, backView, dxFromDownX, dyFromDownY, dx, dy)
+            if (mState satisfy Mask.REJECT || mState satisfy Mask.SLIDE) {
+                var dx = distanceX.toInt()
+                var dy = distanceY.toInt()
+                if (dispatchNestedPreScroll(dx, dy, mScrollConsumed, mScrollOffset)) {
+                    dx -= mScrollConsumed[0]
+                    dy -= mScrollConsumed[1]
+                    dxFromDownX -= mScrollConsumed[0]
+                    dyFromDownY -= mScrollConsumed[1]
+                }
+
+                if (mState satisfy Mask.REJECT) {
+                    return dispatchNestedScroll(
+                        mScrollConsumed[0], mScrollConsumed[1],
+                        dx, dy, mScrollOffset
+                    )
+                } else if (mState satisfy Mask.SLIDE) {
+                    val backView = mBackupView ?: return false
+                    return mGesture.scrollChildView(
+                        topView, backView, dxFromDownX, dyFromDownY, dx, dy
+                    )
+                }
             }
             return false
         }
